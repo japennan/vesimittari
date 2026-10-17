@@ -86,7 +86,8 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
 .gal { align-self: center; font-size: 14px; font-weight: 600; color: var(--cold); text-decoration: underline; cursor: pointer; }
 .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .pick { position: relative; overflow: hidden; text-align: center; }
-#paper { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+.pick > input[type=file] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+.pick:focus-within { outline: 2px solid var(--cold); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -182,7 +183,7 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
       <label class="chk" for="bk-secrets"><input type="checkbox" id="bk-secrets"> Ota mukaan Gemini-avain ja Google-taulukon osoite (puhelimen vaihtoa varten)</label>
       <div class="row2">
         <button class="btn primary" type="button" id="bk-export">Lataa varmuuskopio</button>
-        <div class="btn pick">Palauta varmuuskopiosta<input type="file" id="bk-file" accept=".json,application/json" aria-label="Palauta varmuuskopiosta"></div>
+        <div class="btn pick">Palauta varmuuskopiosta<input type="file" id="bk-file" aria-label="Palauta varmuuskopiosta"></div>
       </div>
       <div id="bk-preview" hidden style="display:flex;flex-direction:column;gap:10px">
         <div class="note" id="bk-info"></div>
@@ -531,10 +532,12 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
   const validP = (p) => p && (p.meter === "kylma" || p.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(p.from) && typeof p.price === "number" && isFinite(p.price);
   $("bk-file").addEventListener("change", async (ev) => {
     const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
-    const info = $("bk-info"); $("bk-preview").hidden = false; info.className = "note";
+    const info = $("bk-info"); $("bk-preview").hidden = false; info.className = "note"; info.textContent = "Luetaan tiedostoa " + f.name + "…";
+    $("bk-preview").scrollIntoView({ behavior: "smooth", block: "center" });
     $("bk-merge").hidden = $("bk-replace").hidden = true;
     try {
-      const d = JSON.parse(await f.text());
+      const txt = (await f.text()).replace(/^\uFEFF/, "").trim();
+      const d = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1) || txt);
       if (!d || d.app !== "vesimittari" || !Array.isArray(d.readings)) throw new Error("Tiedosto ei ole vesimittarin varmuuskopio.");
       const rs = d.readings.filter(validR), ps = (Array.isArray(d.prices) ? d.prices : []).filter(validP);
       const skipped = d.readings.length - rs.length;
