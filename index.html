@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vesimittarin lukemat</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1f6fb2">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #eef2f4; --surface: #ffffff; --fg: #16232b; --muted: #5d6f79; --line: #d3dde2;
+  --cold: #1f6fb2; --cold-soft: #dcebf7; --warm: #c8402c; --warm-soft: #f8e1dc;
+  --drum: #1b2329; --drum-fg: #f4f6f7; --drum-red: #d63a26; --ok: #2e7d4f; --warn: #a96500;
+  --f-digit: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --accent: var(--cold); --accent-soft: var(--cold-soft);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #10171b; --surface: #182228; --fg: #e5ecef; --muted: #93a5ae; --line: #2a3840;
+    --cold: #5aa7e6; --cold-soft: #17324a; --warm: #f07a63; --warm-soft: #3d1f1a;
+    --drum: #0a0f12; --drum-fg: #eef2f4; --drum-red: #ff5a42; --ok: #5cc48a; --warn: #e2a64a;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body.warm { --accent: var(--warm); --accent-soft: var(--warm-soft); }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 40px;
+}
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-family: var(--f-digit); font-weight: 700; font-size: 28px; margin: 0; }
+h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sub { color: var(--muted); font-size: 13px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { font: 600 15px var(--f-body); border: 0; border-radius: 9px; padding: 10px; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.seg .dot { width: 10px; height: 10px; border-radius: 50%; }
+#m-kylma .dot { background: var(--cold); } #m-lammin .dot { background: var(--warm); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--fg); }
+button:focus-visible, input:focus-visible, label.btn:focus-within, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.drum { display: flex; gap: 3px; background: var(--drum); padding: 8px; border-radius: 8px; width: max-content; max-width: 100%; overflow-x: auto; }
+.drum span { font-family: var(--f-digit); font-weight: 600; font-size: 38px; line-height: 1; color: var(--drum-fg); background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 40%, rgba(0,0,0,.25)); padding: 6px 5px; min-width: 26px; text-align: center; border-radius: 3px; font-variant-numeric: tabular-nums; }
+.drum span.r { color: #fff; background-color: var(--drum-red); }
+.drum .unit { background: none; font-size: 18px; align-self: flex-end; padding: 0 4px 4px; min-width: 0; }
+.drum.empty span { color: rgba(255,255,255,.25); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat b { display: block; font-family: var(--f-digit); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat small { color: var(--muted); font-size: 12px; }
+.btn { font: 600 16px var(--f-body); display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 10px; padding: 14px 16px; border: 0; cursor: pointer; background: var(--accent); color: #fff; text-align: center; }
+.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.btn.small { padding: 8px 12px; font-size: 14px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn svg { width: 22px; height: 22px; flex: none; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { flex: 1 1 140px; min-width: 0; }
+.pick { position: relative; overflow: hidden; }
+#photo { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+.pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.confirm { display: flex; flex-direction: column; gap: 10px; }
+.confirm .ask { margin: 0; font-weight: 600; }
+#photo2 { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+.preview.big { grid-template-columns: 1fr; }
+.preview.big img { width: 100%; height: auto; max-height: 60vh; object-fit: contain; background: var(--bg); }
+.preview { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; }
+.preview img { width: 96px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.status .note { color: var(--muted); font-size: 13px; display: block; margin-top: 4px; }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--fg); }
+.pill.low { background: var(--warm-soft); }
+.both { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.dotk, .dotl { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--cold); }
+.dotl { background: var(--warm); }
+input[type="password"] { font: 500 16px var(--f-body); padding: 13px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); width: 100%; }
+.status { font-size: 14px; }
+.status.err { color: var(--warm); }
+.hint { font-size: 13px; color: var(--muted); margin: 0; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
+input[type="text"], input[type="date"], input[type="url"] { font: 600 22px var(--f-digit); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); width: 100%; font-variant-numeric: tabular-nums; }
+input[type="date"], input[type="url"] { font: 500 16px var(--f-body); padding: 13px 12px; }
+textarea { width: 100%; height: 160px; font: 12px ui-monospace, Menlo, Consolas, monospace; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+.warnbox { font-size: 13px; color: var(--warn); }
+ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.sync { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.sync.on { color: var(--ok); }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font: 11px var(--f-body); }
+.chart .grid { stroke: var(--line); }
+.chart .bar { fill: var(--accent); } .chart .bar.last { fill: var(--fg); }
+.item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.item:first-child { border-top: 0; }
+.item .d { font-size: 14px; font-weight: 600; }
+.item small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; font-family: var(--f-body); }
+.item .v { font-family: var(--f-digit); font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.del { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; font: 600 12px var(--f-body); }
+.del.armed { color: #fff; background: var(--warm); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
+@media (max-width: 380px) { .drum span { font-size: 30px; min-width: 20px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Vesimittarin lukemat</h1>
+    <span class="sync" id="sync">Vain tällä laitteella</span>
+  </div>
+
+  <div class="seg" role="group" aria-label="Mittari">
+    <button type="button" id="m-kylma" aria-pressed="true"><span class="dot"></span>Kylmä vesi</button>
+    <button type="button" id="m-lammin" aria-pressed="false"><span class="dot"></span>Lämmin vesi</button>
+  </div>
+
+  <section class="card">
+    <div class="top"><h2 id="meter-title">Kylmä vesi · viimeisin lukema</h2><span class="sub" id="latest-when">Ei lukemia vielä</span></div>
+    <div class="drum empty" id="drum"></div>
+    <div class="stats">
+      <div class="stat"><b id="s-day">–</b><small>l / vrk, viim.</small></div>
+      <div class="stat"><b id="s-week">–</b><small>l / vrk, 7 vrk ka.</small></div>
+      <div class="stat"><b id="s-month">–</b><small>m³ tässä kuussa</small></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Uusi lukema</h2>
+    <div class="btn pick">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      Ota kuva mittarista
+      <input type="file" id="photo" accept="image/*" capture="environment" aria-label="Ota kuva mittarista">
+    </div>
+    <p class="hint" id="shoot-hint">Voit kuvata molemmat mittarit samaan kuvaan. Lukema tunnistetaan kuvasta, ja voit korjata sen ennen tallennusta.</p>
+    <div class="preview" id="preview" hidden>
+      <img id="thumb" alt="Otettu kuva mittarista">
+      <div class="status" id="status"></div>
+    </div>
+    <div class="confirm" id="confirm" hidden>
+      <p class="ask">Näkyvätkö mittarin numerot kuvassa selvästi ja tarkkoina?</p>
+      <div class="row">
+        <button class="btn" type="button" id="go">Kyllä, tunnista lukema</button>
+        <div class="btn ghost pick">Ota uusi kuva<input type="file" id="photo2" accept="image/*" aria-label="Ota uusi kuva"></div>
+      </div>
+    </div>
+    <div class="both" id="both" hidden>
+      <div class="row">
+        <label class="f" for="v-kylma"><span><span class="dotk"></span>Kylmä vesi (m³)</span><input type="text" id="v-kylma" inputmode="decimal" autocomplete="off"></label>
+        <label class="f" for="v-lammin"><span><span class="dotl"></span>Lämmin vesi (m³)</span><input type="text" id="v-lammin" inputmode="decimal" autocomplete="off"></label>
+      </div>
+      <button class="btn" type="button" id="save-both">Tallenna molemmat</button>
+    </div>
+    <div class="row">
+      <label class="f" for="value">Lukema (m³)<input type="text" id="value" inputmode="decimal" autocomplete="off" placeholder="esim. 123,456"></label>
+      <label class="f" for="date">Päivä<input type="date" id="date"></label>
+    </div>
+    <div class="warnbox" id="warn" hidden></div>
+    <button class="btn" type="button" id="save">Tallenna lukema</button>
+  </section>
+
+  <section class="card chart" id="chart-card" hidden>
+    <h2>Kulutus, litraa vuorokaudessa</h2>
+    <div id="chart"></div>
+  </section>
+
+  <section class="card">
+    <h2>Historia</h2>
+    <div id="list"></div>
+  </section>
+
+  <section class="card">
+    <div class="top"><h2>Kuvan tunnistus (Gemini)</h2><button class="btn ghost small" type="button" id="toggle-gem">Näytä asetukset</button></div>
+    <p class="hint" id="gem-state">Tunnistus vaatii ilmaisen Gemini API -avaimen. Ilman avainta lukema kirjoitetaan käsin.</p>
+    <div id="gem" hidden style="display:flex;flex-direction:column;gap:12px">
+      <ol class="steps">
+        <li>Mene osoitteeseen <b>aistudio.google.com/apikey</b> ja kirjaudu Google-tilillä.</li>
+        <li>Paina <b>Create API key</b> ja kopioi avain.</li>
+        <li>Liitä avain alle ja paina Tallenna avain.</li>
+      </ol>
+      <label class="f" for="gkey">Gemini API -avain<input type="password" id="gkey" autocomplete="off" placeholder="AIza…"></label>
+      <label class="f" for="gmodel">Malli<input type="url" id="gmodel" autocomplete="off"></label>
+      <div class="row">
+        <button class="btn" type="button" id="gsave">Tallenna avain</button>
+        <button class="btn ghost" type="button" id="gclear">Poista avain</button>
+      </div>
+      <p class="hint">Avain tallentuu vain tämän laitteen selaimeen. Ilmaisella tasolla Google voi käyttää lähetettyjä kuvia palveluidensa kehittämiseen.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="top"><h2>Google Sheets -tallennus</h2><button class="btn ghost small" type="button" id="toggle-setup">Näytä ohjeet</button></div>
+    <p class="hint" id="sheet-state">Lukemat tallentuvat nyt vain tämän selaimen muistiin. Kytke Google-taulukko, niin ne tallentuvat myös sinne.</p>
+    <div id="setup" hidden style="display:flex;flex-direction:column;gap:12px">
+      <ol class="steps">
+        <li>Luo uusi Google Sheets -taulukko (sheets.new).</li>
+        <li>Valitse taulukossa <b>Laajennukset → Apps Script</b>.</li>
+        <li>Poista editorissa valmiina oleva koodi ja liitä tilalle alla oleva koodi. Tallenna.</li>
+        <li>Paina <b>Ota käyttöön → Uusi käyttöönotto</b>. Valitse tyypiksi <b>Verkkosovellus</b>. Suorita käyttäjänä: <b>Minä</b>. Käyttöoikeus: <b>Kuka tahansa</b>.</li>
+        <li>Hyväksy Googlen lupakysely. Kopioi saamasi verkkosovelluksen URL (päättyy /exec) alla olevaan kenttään.</li>
+      </ol>
+      <textarea id="gs" readonly></textarea>
+      <button class="btn ghost small" type="button" id="copy">Kopioi koodi</button>
+      <label class="f" for="url">Verkkosovelluksen URL<input type="url" id="url" placeholder="https://script.google.com/macros/s/…/exec"></label>
+      <div class="row">
+        <button class="btn" type="button" id="connect">Kytke ja hae lukemat</button>
+        <button class="btn ghost" type="button" id="disconnect">Irrota</button>
+      </div>
+      <p class="hint">Pidä URL omana tietonasi: sen tietävä voi lukea ja lisätä lukemia taulukkoon.</p>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script id="gs-code" type="text/plain">// Vesimittarin lukemat -> Google Sheets
+const SHEET = 'Lukemat';
+
+function sheet_() {
+  const ss = SpreadsheetApp.getActive();
+  let s = ss.getSheetByName(SHEET);
+  if (!s) {
+    s = ss.insertSheet(SHEET);
+    s.appendRow(['Mittari', 'Päivä', 'Lukema m3', 'Lähde', 'Tallennettu']);
+    s.getRange('B:B').setNumberFormat('@');
+  }
+  return s;
+}
+
+function rows_() {
+  const v = sheet_().getDataRange().getValues().slice(1);
+  return v.map(r => ({
+    meter: String(r[0]),
+    date: r[1] instanceof Date ? Utilities.formatDate(r[1], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(r[1]),
+    value: Number(String(r[2]).replace(',', '.')),
+    source: String(r[3])
+  }));
+}
+
+function out_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet() {
+  return out_({ ok: true, rows: rows_() });
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const b = JSON.parse(e.postData.contents);
+    const s = sheet_();
+    const all = rows_();
+    const i = all.findIndex(r => r.meter === b.meter && r.date === b.date);
+    if (b.action === 'delete') {
+      if (i >= 0) s.deleteRow(i + 2);
+    } else {
+      const row = [b.meter, b.date, Number(b.value), b.source || '', new Date()];
+      if (i >= 0) s.getRange(i + 2, 1, 1, 5).setValues([row]);
+      else s.appendRow(row);
+    }
+    return out_({ ok: true });
+  } catch (err) {
+    return out_({ ok: false, error: String(err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+</script>
+
+<script>
+(() => {
+  const METERS = { kylma: "Kylmä", lammin: "Lämmin" };
+  const KEY = "vesimittari-lukemat", URLKEY = "vesimittari-sheets-url";
+  const $ = (id) => document.getElementById(id);
+  const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+                  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+  let meter = store.get("vesimittari-meter", "kylma"); if (!METERS[meter]) meter = "kylma";
+  let all = store.get(KEY, []);            // {meter:"kylma", date, value, source}
+  let sheetUrl = store.get(URLKEY, "");
+  let source = "käsin";
+
+  const fmt = (n, d) => n.toLocaleString("fi-FI", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const localISO = (dt = new Date()) => { const z = (n) => String(n).padStart(2, "0"); return dt.getFullYear() + "-" + z(dt.getMonth() + 1) + "-" + z(dt.getDate()); };
+  const fiDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return d + "." + m + "." + y; };
+  const weekday = (iso) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString("fi-FI", { weekday: "short" }); };
+  const dayDiff = (a, b) => { const p = (s) => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }; return Math.round((p(b) - p(a)) / 86400000); };
+  const parseVal = (s) => { const t = String(s).trim().replace(/\s/g, "").replace(",", "."); return /^\d+(\.\d+)?$/.test(t) ? Number(t) : null; };
+  function toast(m) { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
+
+  $("date").value = localISO();
+  $("gs").value = $("gs-code").textContent.trim();
+  $("url").value = sheetUrl;
+
+  const readings = () => all.filter(r => r.meter === meter).sort((a, b) => a.date < b.date ? -1 : 1);
+  function intervals(rs) {
+    const o = [];
+    for (let i = 1; i < rs.length; i++) { const days = dayDiff(rs[i - 1].date, rs[i].date); if (days > 0) { const l = (rs[i].value - rs[i - 1].value) * 1000; o.push({ date: rs[i].date, days, liters: l, perDay: l / days }); } }
+    return o;
+  }
+
+  function drum(value) {
+    const el = $("drum"); el.innerHTML = ""; el.classList.toggle("empty", value == null);
+    const v = value ?? 0, ip = Math.floor(v + 1e-9), dp = Math.min(999, Math.max(0, Math.round((v - ip) * 1000)));
+    for (const c of String(ip).padStart(5, "0")) { const s = document.createElement("span"); s.textContent = c; el.append(s); }
+    for (const c of String(dp).padStart(3, "0")) { const s = document.createElement("span"); s.className = "r"; s.textContent = c; el.append(s); }
+    const u = document.createElement("span"); u.className = "unit"; u.textContent = "m³"; el.append(u);
+  }
+
+  function render() {
+    document.body.classList.toggle("warm", meter === "lammin");
+    $("m-kylma").setAttribute("aria-pressed", meter === "kylma"); $("m-lammin").setAttribute("aria-pressed", meter === "lammin");
+    $("meter-title").textContent = METERS[meter] + " vesi · viimeisin lukema";
+    const rs = readings(), iv = intervals(rs), last = rs[rs.length - 1], today = localISO();
+    drum(last ? last.value : null);
+    $("latest-when").textContent = last ? fiDate(last.date) : "Ei lukemia vielä";
+    $("s-day").textContent = iv.length ? fmt(Math.round(iv[iv.length - 1].perDay), 0) : "–";
+    const rec = iv.filter(x => dayDiff(x.date, today) < 7), d7 = rec.reduce((s, x) => s + x.days, 0);
+    $("s-week").textContent = d7 ? fmt(Math.round(rec.reduce((s, x) => s + x.liters, 0) / d7), 0) : "–";
+    const mIv = iv.filter(x => x.date.slice(0, 7) === today.slice(0, 7));
+    $("s-month").textContent = mIv.length ? fmt(mIv.reduce((s, x) => s + x.liters, 0) / 1000, 3) : "–";
+    renderChart(iv.slice(-14)); renderList(rs, iv); checkWarn();
+    $("sync").textContent = sheetUrl ? "Google Sheets kytketty" : "Vain tällä laitteella";
+    $("sync").classList.toggle("on", !!sheetUrl);
+    $("sheet-state").textContent = sheetUrl ? "Lukemat tallentuvat Google-taulukkoon ja tämän selaimen muistiin." : "Lukemat tallentuvat nyt vain tämän selaimen muistiin. Kytke Google-taulukko, niin ne tallentuvat myös sinne.";
+  }
+
+  function renderChart(iv) {
+    if (iv.length < 2) { $("chart-card").hidden = true; return; }
+    $("chart-card").hidden = false;
+    const W = 520, H = 200, L = 36, R = 8, T = 12, B = 28, max = Math.max(...iv.map(x => x.perDay), 1);
+    const step = max > 1000 ? 500 : max > 400 ? 200 : max > 200 ? 100 : max > 80 ? 50 : 20, top = Math.ceil(max / step) * step;
+    const y = (v) => T + (H - T - B) * (1 - Math.max(0, v) / top), bw = (W - L - R) / iv.length;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kulutus litraa vuorokaudessa">`;
+    for (let g = 0; g <= top; g += step) s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}"/><text x="${L - 6}" y="${y(g) + 4}" text-anchor="end">${g}</text>`;
+    iv.forEach((x, i) => {
+      const bx = L + i * bw + bw * .18, w = bw * .64, by = y(x.perDay);
+      s += `<rect class="bar${i === iv.length - 1 ? " last" : ""}" x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(1, y(0) - by).toFixed(1)}" rx="2"><title>${fiDate(x.date)}: ${Math.round(x.perDay)} l/vrk</title></rect>`;
+      if (iv.length <= 8 || i % 2 === (iv.length - 1) % 2) { const [, m, d] = x.date.split("-").map(Number); s += `<text x="${(bx + w / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${d}.${m}.</text>`; }
+    });
+    $("chart").innerHTML = s + "</svg>";
+  }
+
+  function renderList(rs, iv) {
+    const list = $("list"); list.innerHTML = "";
+    if (!rs.length) { const p = document.createElement("p"); p.className = "hint"; p.textContent = "Tallennetut lukemat näkyvät tässä. Ota ensimmäinen kuva yllä olevalla painikkeella."; list.append(p); return; }
+    const by = Object.fromEntries(iv.map(x => [x.date, x]));
+    for (const r of [...rs].reverse()) {
+      const row = document.createElement("div"); row.className = "item";
+      const d = document.createElement("div"); d.className = "d"; d.textContent = fiDate(r.date);
+      const sm = document.createElement("small"); sm.textContent = weekday(r.date) + " · " + (r.source || "käsin"); d.append(sm);
+      const v = document.createElement("div"); v.className = "v"; v.textContent = fmt(r.value, 3);
+      const vs = document.createElement("small"), x = by[r.date];
+      vs.textContent = x ? (x.liters >= 0 ? "+" : "") + fmt(Math.round(x.liters), 0) + " l" + (x.days > 1 ? " / " + x.days + " vrk" : "") : "ensimmäinen"; v.append(vs);
+      const del = document.createElement("button"); del.className = "del"; del.type = "button"; del.textContent = "Poista";
+      del.onclick = async () => {
+        if (!del.classList.contains("armed")) { del.classList.add("armed"); del.textContent = "Vahvista"; setTimeout(() => { del.classList.remove("armed"); del.textContent = "Poista"; }, 3000); return; }
+        all = all.filter(a => !(a.meter === r.meter && a.date === r.date)); store.set(KEY, all); render();
+        if (sheetUrl) { try { await post({ action: "delete", meter: METERS[r.meter], date: r.date }); toast("Poistettu myös taulukosta"); } catch (e) { toast("Poistettu täältä, mutta taulukkoon ei saatu yhteyttä"); } }
+        else toast("Lukema poistettu");
+      };
+      row.append(d, v, del); list.append(row);
+    }
+  }
+
+  function checkWarn() {
+    const w = $("warn"), v = parseVal($("value").value), date = $("date").value;
+    if (v == null || !date) { w.hidden = true; return; }
+    const rs = readings(), prev = [...rs].reverse().find(r => r.date < date), next = rs.find(r => r.date > date), same = rs.find(r => r.date === date), m = [];
+    if (prev && v < prev.value) m.push(`Lukema on pienempi kuin edellinen (${fmt(prev.value, 3)} m³, ${fiDate(prev.date)}). Tarkista numerot.`);
+    else if (prev && (v - prev.value) * 1000 / Math.max(1, dayDiff(prev.date, date)) > 2000) m.push("Kulutus olisi yli 2000 l/vrk. Tarkista numerot.");
+    if (next && v > next.value) m.push(`Lukema on suurempi kuin myöhempi lukema ${fiDate(next.date)}.`);
+    if (same) m.push(`Päivälle ${fiDate(date)} on jo lukema ${fmt(same.value, 3)} m³. Tallennus korvaa sen.`);
+    w.textContent = m.join(" "); w.hidden = !m.length;
+  }
+  $("value").addEventListener("input", () => { source = source === "kuva" ? "kuva, korjattu" : source; checkWarn(); });
+  $("date").addEventListener("change", checkWarn);
+  for (const k of Object.keys(METERS)) $("m-" + k).onclick = () => { meter = k; store.set("vesimittari-meter", k); render(); };
+
+  // ---- Photo + Gemini ----
+  const GKEY = "vesimittari-gemini-key", GMODEL = "vesimittari-gemini-model", DEFAULT_MODEL = "gemini-3.8-flash";
+  let gkey = store.get(GKEY, ""), gmodel = store.get(GMODEL, DEFAULT_MODEL) || DEFAULT_MODEL;
+  $("gmodel").value = gmodel; $("gkey").value = gkey;
+  function gemState() { $("gem-state").textContent = gkey ? "Tunnistus käytössä (" + gmodel + "). Avain on tallennettu tälle laitteelle." : "Tunnistus vaatii ilmaisen Gemini API -avaimen. Ilman avainta lukema kirjoitetaan käsin."; }
+  gemState();
+  $("toggle-gem").onclick = () => { const s = $("gem"); s.hidden = !s.hidden; $("toggle-gem").textContent = s.hidden ? "Näytä asetukset" : "Piilota asetukset"; };
+  $("gsave").onclick = () => { gkey = $("gkey").value.trim(); gmodel = $("gmodel").value.trim() || DEFAULT_MODEL; store.set(GKEY, gkey); store.set(GMODEL, gmodel); gemState(); toast(gkey ? "Avain tallennettu" : "Avain puuttuu"); };
+  $("gclear").onclick = () => { gkey = ""; $("gkey").value = ""; store.set(GKEY, ""); gemState(); toast("Avain poistettu"); };
+
+  function toJpeg(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => {
+        URL.revokeObjectURL(url);
+        const k = Math.min(1, 2000 / Math.max(im.width, im.height)), c = document.createElement("canvas");
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        res(c.toDataURL("image/jpeg", 0.88).split(",")[1]);
+      };
+      im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("kuva")); };
+      im.src = url;
+    });
+  }
+
+  function promptText() {
+    const lastOf = (m) => { const r = all.filter(x => x.meter === m).sort((a, b) => a.date < b.date ? -1 : 1); return r[r.length - 1]; };
+    const pk = lastOf("kylma"), pl = lastOf("lammin");
+    return `The photo shows one or two household water meters in Finland (cold and/or hot water). Read the cumulative volume register of every meter in the photo. The photo may be rotated; read it in whatever orientation makes the text upright.\n` +
+      `Meters can be digital LCD (e.g. Kamstrup Multical 21: large digits = whole m³, smaller digits right after them = decimals in 0.001 m³ steps) or mechanical number wheels (black digits = whole m³, red digits = decimals).\n` +
+      `Ignore serial numbers (S/N and large printed numbers next to the display), barcodes, year stickers, Q3/T70/T50 ratings, flow indicators and small dials.\n` +
+      `Classify each meter: "cold" if it has a blue ring/cover or marking T30/T50 or "kylmä"; "hot" if it has a red ring/cover or marking T70/T90 or "lämmin"; otherwise "unknown".\n` +
+      (pk || pl ? `For a sanity check only, previous readings: ${pk ? "cold " + pk.value.toFixed(3) + " m³ (" + pk.date + ")" : ""}${pk && pl ? ", " : ""}${pl ? "hot " + pl.value.toFixed(3) + " m³ (" + pl.date + ")" : ""}. Report what the image actually shows.\n` : "") +
+      `Reply with only JSON: {"meters": [{"type": "cold"|"hot"|"unknown", "integer": "00212", "decimals": "920", "value": 212.92, "confidence": "high"|"medium"|"low"}], "note": "short note in Finnish, empty if nothing to add"}. ` +
+      `"integer" = whole-m³ digits as shown, "decimals" = decimal digits as shown (empty string if none). If nothing is readable reply {"meters": [], "note": "short reason in Finnish"}.`;
+  }
+
+  async function gemini(b64) {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(gmodel)}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": gkey },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: promptText() }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0 }
+      })
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error((j.error && j.error.message) || ("HTTP " + r.status)); e.status = r.status; throw e; }
+    const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+    const m = text.match(/\{[\s\S]*\}/); if (!m) throw new Error("Vastauksesta ei löytynyt lukemaa");
+    return JSON.parse(m[0]);
+  }
+
+  const show = (v) => fmt(v, 3).replace(/\s/g, "");
+  async function recognize(file) {
+    const st = $("status"); st.className = "status";
+    if (!gkey) { st.textContent = "Kuvan tunnistus ei ole käytössä. Kirjoita lukema käsin tai lisää Gemini-avain asetuksista."; return; }
+    st.textContent = "Luetaan lukemaa kuvasta…";
+    try {
+      const res = await gemini(await toJpeg(file));
+      const list = (Array.isArray(res.meters) ? res.meters : []).map(m => {
+        let v = typeof m.value === "number" ? m.value : NaN;
+        if (typeof m.integer === "string" && /^\d+$/.test(m.integer)) { const dec = typeof m.decimals === "string" && /^\d+$/.test(m.decimals) ? m.decimals : ""; v = Number(String(Number(m.integer)) + (dec ? "." + dec : "")); }
+        return { type: m.type, value: v, confidence: m.confidence };
+      }).filter(m => isFinite(m.value));
+      if (!list.length) { st.className = "status err"; st.textContent = res.note || "Lukemaa ei löytynyt kuvasta. Ota uusi kuva lähempää."; return; }
+      const cold = list.find(m => m.type === "cold"), hot = list.find(m => m.type === "hot");
+      const conf = (c) => c === "low" ? "Epävarma" : c === "medium" ? "Melko varma" : "Varma";
+      st.innerHTML = "";
+      const line = (label, m) => { const b = document.createElement("div"); b.textContent = label + show(m.value) + " m³ "; const p = document.createElement("span"); p.className = "pill" + (m.confidence === "low" ? " low" : ""); p.textContent = conf(m.confidence); b.append(p); st.append(b); };
+      if (cold && hot) {
+        $("v-kylma").value = show(cold.value); $("v-lammin").value = show(hot.value); $("both").hidden = false;
+        line("Kylmä: ", cold); line("Lämmin: ", hot);
+        $("value").value = show((meter === "kylma" ? cold : hot).value);
+      } else {
+        const m = (meter === "kylma" ? cold : hot) || list.find(x => x.type === "unknown") || list[0];
+        if (m.type === "cold" && meter !== "kylma") { meter = "kylma"; render(); }
+        if (m.type === "hot" && meter !== "lammin") { meter = "lammin"; render(); }
+        $("value").value = show(m.value); line("Tunnistettu: ", m);
+      }
+      source = "kuva";
+      const n = document.createElement("span"); n.className = "note"; n.textContent = (res.note ? res.note + " " : "") + "Tarkista numerot ja tallenna."; st.append(n);
+      checkWarn();
+    } catch (e) {
+      st.className = "status err";
+      st.textContent = e.status === 400 || e.status === 403 ? "Gemini hylkäsi pyynnön: tarkista API-avain. (" + e.message + ")"
+        : e.status === 404 ? "Mallia " + gmodel + " ei löydy. Vaihda malli asetuksista."
+        : e.status === 429 ? "Ilmaisen tason raja täyttyi. Yritä myöhemmin tai kirjoita lukema käsin."
+        : "Tunnistus epäonnistui: " + e.message;
+    }
+  }
+
+  let pending = null;
+  function onPick(ev) {
+    const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
+    pending = f;
+    $("both").hidden = true; $("preview").hidden = false; $("preview").classList.add("big"); $("status").textContent = "";
+    $("confirm").hidden = false; $("date").value = localISO();
+    const url = URL.createObjectURL(f), t = $("thumb"); t.onload = () => URL.revokeObjectURL(url); t.src = url;
+  }
+  $("photo").addEventListener("change", onPick);
+  $("photo2").addEventListener("change", onPick);
+  $("go").onclick = () => {
+    if (!pending) return;
+    $("confirm").hidden = true; $("preview").classList.remove("big");
+    recognize(pending);
+  };
+
+  $("save-both").onclick = async () => {
+    const vk = parseVal($("v-kylma").value), vl = parseVal($("v-lammin").value), date = $("date").value;
+    if (vk == null || vl == null) { toast("Kirjoita molemmat lukemat numeroina"); return; }
+    if (!date) { toast("Valitse päivä"); return; }
+    const recs = [{ meter: "kylma", date, value: Math.round(vk * 1000) / 1000, source: "kuva" }, { meter: "lammin", date, value: Math.round(vl * 1000) / 1000, source: "kuva" }];
+    all = all.filter(a => a.date !== date).concat(recs); store.set(KEY, all);
+    $("both").hidden = true; $("preview").hidden = true; $("value").value = ""; source = "käsin"; render();
+    if (sheetUrl) {
+      try { for (const r of recs) await post({ action: "save", meter: METERS[r.meter], date, value: r.value, source: r.source }); toast("Molemmat tallennettu ja lähetetty taulukkoon"); }
+      catch (e) { toast("Tallennettu tälle laitteelle, mutta taulukkoon ei saatu yhteyttä"); }
+    } else toast("Molemmat lukemat tallennettu");
+  };
+
+  // ---- Save ----
+  async function post(body) {
+    const r = await fetch(sheetUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) });
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || "virhe"); return j;
+  }
+  $("save").onclick = async () => {
+    const v = parseVal($("value").value), date = $("date").value;
+    if (v == null) { toast("Kirjoita lukema numeroina, esim. 123,456"); $("value").focus(); return; }
+    if (!date) { toast("Valitse päivä"); return; }
+    const rec = { meter, date, value: Math.round(v * 1000) / 1000, source };
+    all = all.filter(a => !(a.meter === meter && a.date === date)).concat(rec); store.set(KEY, all);
+    $("value").value = ""; $("preview").hidden = true; $("both").hidden = true; $("confirm").hidden = true; source = "käsin"; render();
+    if (sheetUrl) {
+      const btn = $("save"); btn.disabled = true;
+      try { await post({ action: "save", meter: METERS[meter], date, value: rec.value, source: rec.source }); toast("Tallennettu ja lähetetty taulukkoon"); }
+      catch (e) { toast("Tallennettu tälle laitteelle, mutta taulukkoon ei saatu yhteyttä"); }
+      finally { btn.disabled = false; }
+    } else toast(METERS[meter] + " vesi: " + fmt(rec.value, 3) + " m³ tallennettu");
+  };
+
+  // ---- Sheets setup ----
+  $("toggle-setup").onclick = () => { const s = $("setup"); s.hidden = !s.hidden; $("toggle-setup").textContent = s.hidden ? "Näytä ohjeet" : "Piilota ohjeet"; };
+  $("copy").onclick = async () => { try { await navigator.clipboard.writeText($("gs").value); toast("Koodi kopioitu"); } catch (e) { $("gs").select(); toast("Valitse ja kopioi koodi"); } };
+  async function pull() {
+    const r = await fetch(sheetUrl); const j = await r.json(); if (!j.ok) throw new Error("virhe");
+    const rev = { "Kylmä": "kylma", "Lämmin": "lammin" };
+    const remote = j.rows.filter(x => rev[x.meter] && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && isFinite(x.value)).map(x => ({ meter: rev[x.meter], date: x.date, value: x.value, source: x.source || "taulukko" }));
+    const keyOf = (r) => r.meter + "|" + r.date, map = new Map(all.map(r => [keyOf(r), r]));
+    for (const r of remote) map.set(keyOf(r), r);
+    const localOnly = all.filter(r => !remote.some(x => keyOf(x) === keyOf(r)));
+    all = [...map.values()]; store.set(KEY, all); render();
+    return localOnly;
+  }
+  $("connect").onclick = async () => {
+    const u = $("url").value.trim();
+    if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)) { toast("URL:n pitää alkaa script.google.com ja päättyä /exec"); return; }
+    sheetUrl = u; const btn = $("connect"); btn.disabled = true;
+    try {
+      const localOnly = await pull();
+      for (const r of localOnly) await post({ action: "save", meter: METERS[r.meter], date: r.date, value: r.value, source: r.source });
+      store.set(URLKEY, sheetUrl); render();
+      toast("Kytketty" + (localOnly.length ? ", " + localOnly.length + " lukemaa lähetetty taulukkoon" : ""));
+    } catch (e) { sheetUrl = store.get(URLKEY, ""); toast("Yhteys ei toiminut. Tarkista URL ja että käyttöoikeus on Kuka tahansa."); }
+    finally { btn.disabled = false; }
+  };
+  $("disconnect").onclick = () => { sheetUrl = ""; store.set(URLKEY, ""); $("url").value = ""; render(); toast("Taulukko irrotettu. Lukemat jäävät tälle laitteelle."); };
+
+  render();
+  if (sheetUrl) pull().catch(() => {});
+})();
+</script>
+</body>
+</html>
