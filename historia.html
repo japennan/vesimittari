@@ -55,6 +55,8 @@ button:focus-visible { outline: 2px solid var(--cold); outline-offset: 2px; }
 .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; z-index: 2; }
 .tip b { display: block; margin-bottom: 2px; }
 .tip div { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.avg { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.avgl { stroke: var(--fg); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .55; }
 .note { font-size: 13px; color: var(--muted); margin: 0; }
 .tablewrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -106,10 +108,18 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
 
     <section class="card">
       <div class="top">
-        <h2 id="chart-title">Kulutus, litraa vuorokaudessa</h2>
-        <div class="legend"><span><span class="sw c"></span>Kylmä</span><span><span class="sw h"></span>Lämmin</span></div>
+        <h2><span class="sw c" style="display:inline-block;margin-right:6px"></span>Kylmä vesi · <span class="unit-t">l/vrk</span></h2>
+        <span class="avg" id="avg-c"></span>
       </div>
-      <div class="chartwrap" id="chartwrap"><div class="tip" id="tip" hidden></div></div>
+      <div class="chartwrap" id="chart-c"><div class="tip" hidden></div></div>
+    </section>
+
+    <section class="card">
+      <div class="top">
+        <h2><span class="sw h" style="display:inline-block;margin-right:6px"></span>Lämmin vesi · <span class="unit-t">l/vrk</span></h2>
+        <span class="avg" id="avg-h"></span>
+      </div>
+      <div class="chartwrap" id="chart-h"><div class="tip" hidden></div></div>
       <p class="note" id="chart-note"></p>
     </section>
 
@@ -206,66 +216,58 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
     $("t-tot").textContent = fmt((sc + sh) / 1000, 2);
     $("t-share").textContent = sc + sh > 0 && nh ? fmt(Math.round(sh / (sc + sh) * 100), 0) + " %" : "–";
 
-    $("chart-title").textContent = mode === "day" ? "Kulutus, litraa vuorokaudessa" : mode === "week" ? "Kulutus viikoittain, keskim. l/vrk" : "Kulutus kuukausittain, keskim. l/vrk";
+    const unitT = mode === "day" ? "litraa vuorokaudessa" : mode === "week" ? "viikoittain, keskim. l/vrk" : "kuukausittain, keskim. l/vrk";
+    for (const el of document.querySelectorAll(".unit-t")) el.textContent = unitT;
     $("chart-note").textContent = "Jakso " + fiDate(list[0]) + "–" + fiDate(last) + ". Jos lukemien välissä on useampi päivä, kulutus jaetaan niille tasan.";
-    chart(buckets(list, mode), mode);
+    const bs = buckets(list, mode);
+    chart($("chart-c"), bs, mode, "pc", "nc", "bc", "Kylmä", nc ? sc / nc : null, $("avg-c"));
+    chart($("chart-h"), bs, mode, "ph", "nh", "bh", "Lämmin", nh ? sh / nh : null, $("avg-h"));
     table();
   }
 
   function niceStep(max) { const raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
 
-  function chart(bs, mode) {
-    const wrap = $("chartwrap"), tip = $("tip");
-    wrap.querySelector("svg")?.remove();
-    const W = 680, H = 260, L = 44, R = 8, T = 10, B = 28;
-    const max = Math.max(1, ...bs.map(b => b.pc + b.ph));
+  function chart(wrap, bs, mode, k, nk, cls, name, avg, avgEl) {
+    const tip = wrap.querySelector(".tip");
+    wrap.querySelector("svg")?.remove(); tip.hidden = true;
+    avgEl.textContent = avg == null ? "" : "keskim. " + fmt(Math.round(avg), 0) + " l/vrk";
+    const W = Math.round(Math.min(680, Math.max(300, wrap.clientWidth || 680))), H = W < 500 ? 180 : 200, L = 40, R = 6, T = 10, B = 26;
+    const max = Math.max(1, ...bs.map(b => b[k]));
     const step = niceStep(max), top = Math.ceil(max / step) * step;
-    const y = (v) => T + (H - T - B) * (1 - v / top);
+    const y = (v) => T + (H - T - B) * (1 - Math.max(0, v) / top);
     const slot = (W - L - R) / bs.length, bw = Math.max(2, Math.min(28, slot * .7));
-    const ns = "http://www.w3.org/2000/svg";
-    let s = `<svg xmlns="${ns}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${$("chart-title").textContent}">`;
-    for (let g = 0; g <= top + 1e-9; g += step) s += `<line class="gridl" x1="${L}" x2="${W - R}" y1="${y(g).toFixed(1)}" y2="${y(g).toFixed(1)}"/><text x="${L - 6}" y="${(y(g) + 4).toFixed(1)}" text-anchor="end">${fmt(g, 0)}</text>`;
-    s += `<rect class="hl" id="hl" x="0" y="${T}" width="${slot.toFixed(1)}" height="${H - T - B}" visibility="hidden"/>`;
-    const r = Math.min(4, bw / 2), every = Math.max(1, Math.ceil(bs.length / (W < 500 ? 5 : 7)));
+    let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${name} vesi, kulutus">`;
+    for (let g = 0; g <= top + 1e-9; g += step) s += `<line class="gridl" x1="${L}" x2="${W - R}" y1="${y(g).toFixed(1)}" y2="${y(g).toFixed(1)}"/><text x="${L - 6}" y="${(y(g) + 4).toFixed(1)}" text-anchor="end">${fmt(g, step < 1 ? 1 : 0)}</text>`;
+    s += `<rect class="hl" x="0" y="${T}" width="${slot.toFixed(1)}" height="${H - T - B}" visibility="hidden"/>`;
+    const r = Math.min(4, bw / 2), every = Math.max(1, Math.ceil(bs.length / (W < 500 ? 6 : 9)));
     bs.forEach((b, i) => {
-      const cx = L + i * slot + slot / 2, x = cx - bw / 2, base = y(0);
-      const yc = y(b.pc), yh = y(b.pc + b.ph);
-      const hc = Math.max(0, base - yc), hh = Math.max(0, yc - yh - (b.pc > 0 && b.ph > 0 ? 2 : 0));
-      // cold at bottom (square ends), hot on top with rounded top; if one series, round its top
-      if (hc > 0) s += b.ph > 0 ? `<rect class="bc" x="${x.toFixed(1)}" y="${yc.toFixed(1)}" width="${bw.toFixed(1)}" height="${hc.toFixed(1)}"/>` : roundTop("bc", x, yc, bw, hc, r);
-      if (hh > 0) s += roundTop("bh", x, yh, bw, hh, r);
+      const cx = L + i * slot + slot / 2, x = cx - bw / 2, v = b[k];
+      if (b[nk] && v > 0) { const yt = y(v), h = Math.max(1, y(0) - yt); s += roundTop(cls, x, y(0) - h, bw, h, r); }
       if (i % every === (bs.length - 1) % every) {
-        const lab = mode === "month" ? MONTHS[Number(b.key.slice(5, 7)) - 1] + (b.key.slice(5, 7) === "01" || i === (bs.length - 1) % every ? " " + b.key.slice(2, 4) : "") : short(b.key);
-        s += `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle">${lab}</text>`;
+        const lab = mode === "month" ? MONTHS[Number(b.key.slice(5, 7)) - 1] + " " + b.key.slice(2, 4) : short(b.key);
+        const edge = cx + 18 > W - R; s += `<text x="${(edge ? W - R : cx).toFixed(1)}" y="${H - 8}" text-anchor="${edge ? "end" : "middle"}">${lab}</text>`;
       }
     });
-    s += `<line class="base" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>`;
-    s += `<rect id="hit" x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent"/></svg>`;
+    if (avg != null && avg > 0) s += `<line class="avgl" x1="${L}" x2="${W - R}" y1="${y(avg).toFixed(1)}" y2="${y(avg).toFixed(1)}"/>`;
+    s += `<line class="base" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/></svg>`;
     wrap.insertAdjacentHTML("beforeend", s);
-    const svg = wrap.querySelector("svg"), hl = svg.getElementById("hl");
-
+    const svg = wrap.querySelector("svg"), hl = svg.querySelector(".hl");
+    const unit = mode === "day" ? " l" : " l/vrk";
     function show(ev) {
-      const rect = svg.getBoundingClientRect(), px = (ev.clientX - rect.left) * W / rect.width;
-      const i = Math.floor((px - L) / slot);
+      const rect = svg.getBoundingClientRect(), px = (ev.clientX - rect.left) * W / rect.width, i = Math.floor((px - L) / slot);
       if (i < 0 || i >= bs.length) return hide();
       const b = bs[i];
       hl.setAttribute("x", (L + i * slot).toFixed(1)); hl.setAttribute("visibility", "visible");
-      const head = mode === "day" ? fiDate(b.key) : mode === "week" ? short(b.start) + "–" + fiDate(b.end) : MONTHS[Number(b.key.slice(5, 7)) - 1] + "kuu " + b.key.slice(0, 4);
-      const unit = mode === "day" ? " l" : " l/vrk";
-      tip.innerHTML = "";
-      const h = document.createElement("b"); h.textContent = head; tip.append(h);
-      const row = (cls, name, v) => { const d = document.createElement("div"); const sw = document.createElement("span"); sw.className = "sw " + cls; d.append(sw, name + " " + fmt(Math.round(v), 0) + unit); tip.append(d); };
-      row("c", "Kylmä", b.pc); row("h", "Lämmin", b.ph);
-      const t = document.createElement("div"); t.textContent = "Yhteensä " + fmt(Math.round(b.pc + b.ph), 0) + unit; tip.append(t);
+      const head = mode === "day" ? fiDate(b.key) + " (" + new Date(toUTC(b.key)).toLocaleDateString("fi-FI", { weekday: "short", timeZone: "UTC" }) + ")" : mode === "week" ? short(b.start) + "–" + fiDate(b.end) : MONTHS[Number(b.key.slice(5, 7)) - 1] + "kuu " + b.key.slice(0, 4);
+      tip.innerHTML = ""; const hd = document.createElement("b"); hd.textContent = head; tip.append(hd);
+      const d = document.createElement("div"); d.textContent = b[nk] ? name + " " + fmt(Math.round(b[k]), 0) + unit : "Ei lukemaa"; tip.append(d);
+      if (avg && b[nk]) { const e = document.createElement("div"); const diff = Math.round((b[k] / avg - 1) * 100); e.textContent = (diff >= 0 ? "+" : "") + diff + " % keskiarvoon"; tip.append(e); }
       tip.hidden = false;
       const cx = (L + i * slot + slot / 2) * rect.width / W, tw = tip.offsetWidth, ww = wrap.clientWidth;
-      tip.style.left = Math.max(0, Math.min(ww - tw, cx - tw / 2)) + "px";
-      tip.style.top = "0px";
+      tip.style.left = Math.max(0, Math.min(ww - tw, cx - tw / 2)) + "px"; tip.style.top = "0px";
     }
     function hide() { tip.hidden = true; hl.setAttribute("visibility", "hidden"); }
-    svg.addEventListener("pointermove", show);
-    svg.addEventListener("pointerdown", show);
-    svg.addEventListener("pointerleave", hide);
+    svg.addEventListener("pointermove", show); svg.addEventListener("pointerdown", show); svg.addEventListener("pointerleave", hide);
   }
   function roundTop(cls, x, y, w, h, r) {
     r = Math.min(r, h);
@@ -398,6 +400,7 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
   $("paper").addEventListener("change", onPaper);
   $("paper2").addEventListener("change", onPaper);
 
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 150); });
   render();
 })();
 </script>
