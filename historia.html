@@ -69,6 +69,8 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
 .btn.primary { background: var(--cold); color: #fff; border-color: var(--cold); }
 .btn:disabled { opacity: .5; }
 .bad { color: var(--hot); }
+.gal { align-self: center; font-size: 14px; font-weight: 600; color: var(--cold); text-decoration: underline; cursor: pointer; }
+.vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .pick { position: relative; overflow: hidden; text-align: center; }
 #paper { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
 </style>
@@ -120,7 +122,9 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
     <section class="card" id="import-card">
       <h2>Tuo vanhat lukemat</h2>
       <p class="note">Liitä tai kirjoita yksi päivä riville: päivämäärä, kylmän lukema ja lämpimän lukema. Erota luvut välilyönnillä. Jos tiedossa on vain yksi mittari, kirjoita rivin alkuun <b>kylmä</b> tai <b>lämmin</b>.</p>
-      <div class="btn pick" id="paper-btn">Kuvaa käsin kirjoitettu paperi<input type="file" id="paper" accept="image/*" aria-label="Kuvaa käsin kirjoitettu paperi"></div>
+      <div class="btn pick" id="paper-btn">Kuvaa käsin kirjoitettu paperi<input type="file" id="paper" accept="image/*" capture="environment" aria-label="Kuvaa käsin kirjoitettu paperi"></div>
+      <label class="gal" for="paper2">tai valitse kuva galleriasta</label>
+      <input type="file" id="paper2" accept="image/*" class="vh">
       <textarea id="imp" rows="7" placeholder="1.10.2026 205,310 67,120&#10;2.10.2026 205,560 67,230&#10;lämmin 3.10.2026 67,340"></textarea>
       <div class="note" id="imp-msg"></div>
       <div class="row2">
@@ -359,7 +363,7 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
       im.src = url;
     });
   }
-  $("paper").addEventListener("change", async (ev) => {
+  async function onPaper(ev) {
     const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
     const msg = $("imp-msg"); msg.className = "note";
     let key = "", model = "gemini-3.8-flash";
@@ -390,7 +394,9 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
       $("imp-save").disabled = true;
       msg.textContent = (res.note ? res.note + " " : "") + "Vertaa rivejä paperiin, korjaa virheet ja paina Tarkista.";
     } catch (e) { msg.textContent = "Paperin lukeminen epäonnistui: " + e.message; }
-  });
+  }
+  $("paper").addEventListener("change", onPaper);
+  $("paper2").addEventListener("change", onPaper);
 
   render();
 })();
