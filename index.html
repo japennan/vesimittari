@@ -174,7 +174,7 @@ ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
   </section>
 
   <section class="card">
-    <h2>Historia</h2>
+    <div class="top"><h2>Viimeisimmät lukemat</h2><a class="hist" href="historia.html">Kaaviot ja raportit →</a></div>
     <div id="list"></div>
   </section>
 
@@ -350,11 +350,13 @@ function doPost(e) {
     $("chart").innerHTML = s + "</svg>";
   }
 
+  let showCount = 7;
   function renderList(rs, iv) {
     const list = $("list"); list.innerHTML = "";
     if (!rs.length) { const p = document.createElement("p"); p.className = "hint"; p.textContent = "Tallennetut lukemat näkyvät tässä. Ota ensimmäinen kuva yllä olevalla painikkeella."; list.append(p); return; }
     const by = Object.fromEntries(iv.map(x => [x.date, x]));
-    for (const r of [...rs].reverse()) {
+    const shown = [...rs].reverse().slice(0, showCount);
+    for (const r of shown) {
       const row = document.createElement("div"); row.className = "item";
       const d = document.createElement("div"); d.className = "d"; d.textContent = fiDate(r.date);
       const sm = document.createElement("small"); sm.textContent = weekday(r.date) + " · " + (r.source || "käsin"); d.append(sm);
@@ -370,6 +372,15 @@ function doPost(e) {
       };
       row.append(d, v, del); list.append(row);
     }
+    if (rs.length > shown.length) {
+      const more = document.createElement("button"); more.type = "button"; more.className = "btn ghost small"; more.style.marginTop = "8px";
+      more.textContent = "Näytä lisää (" + (rs.length - shown.length) + " vanhempaa)";
+      more.onclick = () => { showCount += 30; render(); };
+      list.append(more);
+    } else if (showCount > 7 && rs.length > 7) {
+      const less = document.createElement("button"); less.type = "button"; less.className = "btn ghost small"; less.style.marginTop = "8px";
+      less.textContent = "Näytä vähemmän"; less.onclick = () => { showCount = 7; render(); }; list.append(less);
+    }
   }
 
   function checkWarn() {
@@ -384,7 +395,7 @@ function doPost(e) {
   }
   $("value").addEventListener("input", () => { source = source === "kuva" ? "kuva, korjattu" : source; checkWarn(); });
   $("date").addEventListener("change", checkWarn);
-  for (const k of Object.keys(METERS)) $("m-" + k).onclick = () => { meter = k; store.set("vesimittari-meter", k); render(); };
+  for (const k of Object.keys(METERS)) $("m-" + k).onclick = () => { meter = k; showCount = 7; store.set("vesimittari-meter", k); render(); };
 
   // ---- Photo + Gemini ----
   const GKEY = "vesimittari-gemini-key", GMODEL = "vesimittari-gemini-model", DEFAULT_MODEL = "gemini-3.8-flash";

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vesimittarin kuukausiraportti</title>
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root { --fg: #16232b; --muted: #5d6f79; --line: #d3dde2; --cold: #1f6fb2; --hot: #c8402c; --bg: #eef2f4;
+  --f-digit: "Barlow Condensed", "Arial Narrow", sans-serif; --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 40px; }
+[hidden] { display: none !important; }
+.bar { max-width: 760px; margin: 0 auto 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.bar a { color: var(--cold); font-weight: 600; text-decoration: none; }
+.bar select { font: 500 15px var(--f-body); padding: 9px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--fg); }
+.btn { font: 600 15px var(--f-body); border-radius: 10px; padding: 11px 16px; border: 0; background: var(--cold); color: #fff; cursor: pointer; }
+.paper { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 28px 28px 32px; }
+h1 { font: 700 28px/1.1 var(--f-digit); margin: 0; }
+.sub { color: var(--muted); margin: 4px 0 20px; font-size: 13px; }
+h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 22px 0 8px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: 11px; color: var(--muted); font-weight: 600; }
+tfoot td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--fg); }
+.sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
+.c { background: var(--cold); } .h { background: var(--hot); }
+.daily td, .daily th { padding: 3px 6px; font-size: 12px; }
+.wknd td:first-child { color: var(--muted); }
+.big { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 4px; }
+.big div { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.big b { display: block; font: 600 26px/1.1 var(--f-digit); font-variant-numeric: tabular-nums; }
+.big small { color: var(--muted); font-size: 12px; }
+.scroll { overflow-x: auto; }
+.foot { margin-top: 20px; color: var(--muted); font-size: 11px; }
+.hint { max-width: 760px; margin: 10px auto 0; color: var(--muted); font-size: 13px; }
+@media (max-width: 520px) { .paper { padding: 18px 14px; } .big { grid-template-columns: 1fr 1fr; } }
+@page { size: A4; margin: 14mm; }
+@media print {
+  body { background: #fff; padding: 0; }
+  .bar, .hint { display: none !important; }
+  .paper { border: 0; padding: 0; max-width: none; }
+  .scroll { overflow: visible; }
+  tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <a href="historia.html">← Historia</a>
+  <select id="month" aria-label="Kuukausi"></select>
+  <button class="btn" type="button" id="pdf">Tallenna PDF</button>
+</div>
+<div class="paper" id="paper"></div>
+<p class="hint">Tallenna PDF avaa tulostusikkunan. Valitse tulostimeksi <b>Tallenna PDF-tiedostona</b> ja paina latauskuvaketta.</p>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const DAY = 86400000, MONTHS = ["tammikuu", "helmikuu", "maaliskuu", "huhtikuu", "toukokuu", "kesäkuu", "heinäkuu", "elokuu", "syyskuu", "lokakuu", "marraskuu", "joulukuu"];
+  const toUTC = (s) => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+  const fromUTC = (t) => new Date(t).toISOString().slice(0, 10);
+  const fiDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return d + "." + m + "." + y; };
+  const fmt = (n, d) => n.toLocaleString("fi-FI", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const eur = (n) => fmt(n, 2) + " €";
+  const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || "[]") || []; } catch (e) { return []; } };
+  const all = read("vesimittari-lukemat").filter(r => r && (r.meter === "kylma" || r.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && isFinite(r.value));
+  const prices = read("vesimittari-hinnat").filter(p => p && /^\d{4}-\d{2}-\d{2}$/.test(p.from) && isFinite(p.price));
+  const priceAt = (meter, day) => { let b = null; for (const p of prices) if (p.meter === meter && p.from <= day && (!b || p.from > b.from)) b = p; return b ? b.price : null; };
+
+  function daily(meter) {
+    const rs = all.filter(r => r.meter === meter).sort((a, b) => a.date < b.date ? -1 : 1), out = new Map();
+    for (let i = 1; i < rs.length; i++) {
+      const a = toUTC(rs[i - 1].date), n = Math.round((toUTC(rs[i].date) - a) / DAY);
+      if (n <= 0) continue;
+      const per = (rs[i].value - rs[i - 1].value) * 1000 / n;
+      for (let k = 1; k <= n; k++) out.set(fromUTC(a + k * DAY), per);
+    }
+    return out;
+  }
+  const dc = daily("kylma"), dh = daily("lammin");
+  const months = [...new Set([...dc.keys(), ...dh.keys(), ...all.map(r => r.date)].map(d => d.slice(0, 7)))].sort().reverse();
+
+  const sel = $("month");
+  if (!months.length) { $("paper").innerHTML = "<h1>Ei tietoja</h1><p class='sub'>Raportti tarvitsee vähintään kaksi lukemaa. Tallenna lukemia etusivulla.</p>"; sel.hidden = true; $("pdf").hidden = true; return; }
+  for (const m of months) { const o = document.createElement("option"); const [y, mo] = m.split("-").map(Number); o.value = m; o.textContent = MONTHS[mo - 1] + " " + y; sel.append(o); }
+  const want = new URLSearchParams(location.search).get("kk");
+  sel.value = months.includes(want) ? want : months[0];
+  sel.onchange = () => { history.replaceState(null, "", "?kk=" + sel.value); render(); };
+  $("pdf").onclick = () => window.print();
+
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function row(cells, tag = "td") { const tr = document.createElement("tr"); for (const c of cells) { const td = document.createElement(tag); if (c instanceof Node) td.append(c); else td.textContent = c; tr.append(td); } return tr; }
+  const label = (cls, t) => { const s = document.createElement("span"); s.append(el("span", "sw " + cls), t); return s; };
+
+  function render() {
+    const m = sel.value, [y, mo] = m.split("-").map(Number);
+    const first = m + "-01", nDays = new Date(Date.UTC(y, mo, 0)).getUTCDate(), last = m + "-" + String(nDays).padStart(2, "0");
+    document.title = "Vesimittari " + MONTHS[mo - 1] + " " + y;
+    const days = []; for (let d = 1; d <= nDays; d++) days.push(m + "-" + String(d).padStart(2, "0"));
+    const hasP = prices.length > 0;
+    const sum = (map) => days.reduce((s, d) => s + (map.get(d) || 0), 0);
+    const cost = (meter, map) => days.reduce((s, d) => { const p = priceAt(meter, d), l = map.get(d); return s + (p != null && l != null ? l / 1000 * p : 0); }, 0);
+    const lc = sum(dc), lh = sum(dh), ec = cost("kylma", dc), eh = cost("lammin", dh);
+    const covered = days.filter(d => dc.has(d) || dh.has(d));
+
+    const P = $("paper"); P.innerHTML = "";
+    P.append(el("h1", "", "Vesimittarin kuukausiraportti · " + MONTHS[mo - 1] + " " + y));
+    P.append(el("p", "sub", "Jakso " + fiDate(first) + "–" + fiDate(last) + ". Kulutusta laskettu " + covered.length + " päivälle " + nDays + ":stä. Tulostettu " + fiDate(new Date().toISOString().slice(0, 10)) + "."));
+
+    const big = el("div", "big");
+    const tile = (v, t) => { const d = el("div"); d.append(el("b", "", v), el("small", "", t)); big.append(d); };
+    tile(fmt((lc + lh) / 1000, 3) + " m³", "Kulutus yhteensä");
+    tile(covered.length ? fmt(Math.round((lc + lh) / covered.length), 0) + " l" : "–", "Keskimäärin vuorokaudessa");
+    tile(hasP ? eur(ec + eh) : "–", hasP ? "Vesimaksut yhteensä" : "Hintoja ei syötetty");
+    P.append(big);
+
+    // Summary per meter
+    P.append(el("h2", "", "Mittarit"));
+    const readsIn = (meter) => all.filter(r => r.meter === meter && r.date >= first && r.date <= last).sort((a, b) => a.date < b.date ? -1 : 1);
+    const before = (meter) => all.filter(r => r.meter === meter && r.date < first).sort((a, b) => a.date < b.date ? -1 : 1).pop();
+    const t1 = document.createElement("table");
+    t1.append(row(["Mittari", "Alkulukema", "Loppulukema", "Kulutus m³", ...(hasP ? ["€ / m³", "Maksu"] : [])], "th"));
+    for (const [meter, name, cls, l, e] of [["kylma", "Kylmä vesi", "c", lc, ec], ["lammin", "Lämmin vesi", "h", lh, eh]]) {
+      const rin = readsIn(meter), b = before(meter) || rin[0], end = rin[rin.length - 1];
+      const ps = [...new Set(days.map(d => priceAt(meter, d)).filter(p => p != null))];
+      t1.append(row([label(cls, name), b ? fmt(b.value, 3) + " (" + fiDate(b.date) + ")" : "–", end ? fmt(end.value, 3) + " (" + fiDate(end.date) + ")" : "–", fmt(l / 1000, 3),
+        ...(hasP ? [ps.length ? ps.map(p => fmt(p, 2)).join(" / ") : "–", eur(e)] : [])]));
+    }
+    const tf = document.createElement("tfoot"); tf.append(row(["Yhteensä", "", "", fmt((lc + lh) / 1000, 3), ...(hasP ? ["", eur(ec + eh)] : [])])); t1.append(tf);
+    const s1 = el("div", "scroll"); s1.append(t1); P.append(s1);
+
+    // Daily table
+    P.append(el("h2", "", "Päivittäinen kulutus, litraa"));
+    const t2 = document.createElement("table"); t2.className = "daily";
+    t2.append(row(["Päivä", label("c", "Kylmä"), label("h", "Lämmin"), "Yhteensä", ...(hasP ? ["€"] : [])], "th"));
+    for (const d of days) {
+      const c = dc.get(d), h = dh.get(d), wd = new Date(toUTC(d)).getUTCDay();
+      const dayCost = hasP ? [["kylma", c], ["lammin", h]].reduce((s, [mt, l]) => { const p = priceAt(mt, d); return s + (p != null && l != null ? l / 1000 * p : 0); }, 0) : 0;
+      const tr = row([new Date(toUTC(d)).toLocaleDateString("fi-FI", { weekday: "short", timeZone: "UTC" }) + " " + fiDate(d),
+        c != null ? fmt(Math.round(c), 0) : "–", h != null ? fmt(Math.round(h), 0) : "–",
+        c != null || h != null ? fmt(Math.round((c || 0) + (h || 0)), 0) : "–", ...(hasP ? [c != null || h != null ? fmt(dayCost, 2) : "–"] : [])]);
+      if (wd === 0 || wd === 6) tr.className = "wknd";
+      t2.append(tr);
+    }
+    const tf2 = document.createElement("tfoot"); tf2.append(row(["Yhteensä", fmt(Math.round(lc), 0), fmt(Math.round(lh), 0), fmt(Math.round(lc + lh), 0), ...(hasP ? [fmt(ec + eh, 2)] : [])])); t2.append(tf2);
+    const s2 = el("div", "scroll"); s2.append(t2); P.append(s2);
+
+    P.append(el("p", "foot", "Kulutus lasketaan peräkkäisten lukemien erotuksesta. Jos lukemien välissä on useampi päivä, kulutus jaetaan niille tasan. Lukemat on tallennettu vain tälle laitteelle."));
+  }
+  render();
+})();
+</script>
+</body>
+</html>

@@ -55,6 +55,15 @@ button:focus-visible { outline: 2px solid var(--cold); outline-offset: 2px; }
 .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; z-index: 2; }
 .tip b { display: block; margin-bottom: 2px; }
 .tip div { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.pform { display: grid; grid-template-columns: 1.2fr 1.2fr 1fr; gap: 8px; }
+@media (max-width: 440px) { .pform { grid-template-columns: 1fr 1fr; } .pform .pf:first-child { grid-column: 1 / -1; } }
+.pf { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); min-width: 0; }
+.pf select, .pf input { font: 500 16px var(--f-body); padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); width: 100%; min-width: 0; }
+.prow { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; font-variant-numeric: tabular-nums; }
+.prow:first-child { border-top: 0; }
+.prow .pr { font-weight: 700; }
+.del { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; font: 600 12px var(--f-body); }
+.del.armed { color: #fff; background: var(--hot); }
 .avg { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .avgl { stroke: var(--fg); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .55; }
 .note { font-size: 13px; color: var(--muted); margin: 0; }
@@ -104,6 +113,12 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
         <div class="tile"><b id="t-tot">–</b><small>Yhteensä, m³</small></div>
         <div class="tile"><b id="t-share">–</b><small>Lämpimän osuus</small></div>
       </div>
+      <div class="tiles" id="cost-tiles" hidden>
+        <div class="tile"><b id="e-cold">–</b><small><span class="sw c"></span>Kylmä, €</small></div>
+        <div class="tile"><b id="e-hot">–</b><small><span class="sw h"></span>Lämmin, €</small></div>
+        <div class="tile"><b id="e-tot">–</b><small>Yhteensä, €</small></div>
+        <div class="tile"><b id="e-day">–</b><small>€ / vrk keskim.</small></div>
+      </div>
     </section>
 
     <section class="card">
@@ -123,10 +138,25 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
       <p class="note" id="chart-note"></p>
     </section>
 
+    <section class="card" id="price-card">
+      <h2>Vesimaksut</h2>
+      <p class="note">Syötä hinta euroina kuutiolta ja päivä, josta lähtien se on voimassa. Kun hinta muuttuu, lisää uusi rivi uudella alkupäivällä. Vanhat hinnat jäävät voimaan aiemmille päiville.</p>
+      <div id="price-list"></div>
+      <div class="pform">
+        <label class="pf" for="p-meter">Mittari
+          <select id="p-meter"><option value="kylma">Kylmä vesi</option><option value="lammin">Lämmin vesi</option></select>
+        </label>
+        <label class="pf" for="p-from">Alkaen<input type="date" id="p-from"></label>
+        <label class="pf" for="p-price">€ / m³<input type="text" id="p-price" inputmode="decimal" placeholder="esim. 5,90" autocomplete="off"></label>
+      </div>
+      <button class="btn primary" type="button" id="p-add">Lisää hinta</button>
+    </section>
+
     <section class="card">
       <h2>Kuukausittain</h2>
       <div class="tablewrap"><table id="months"></table></div>
-      <p class="note">Kuukauden kulutus lasketaan lukemien välillä tasaisesti jaettuna. Ensimmäinen ja viimeinen kuukausi voivat olla vajaita.</p>
+      <a class="btn" href="raportti.html" style="text-align:center;text-decoration:none">Kuukausiraportti PDF:nä</a>
+      <p class="note">Napauta kuukauden nimeä, niin pääset sen kuukauden raporttiin. Kuukauden kulutus lasketaan lukemien välillä tasaisesti jaettuna. Ensimmäinen ja viimeinen kuukausi voivat olla vajaita.</p>
     </section>
 
     <section class="card" id="import-card">
@@ -176,7 +206,23 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
   const dc = daily("kylma"), dh = daily("lammin");
   const days = [...new Set([...dc.keys(), ...dh.keys()])].sort();
 
-  if (!days.length) { $("empty").hidden = false; for (const el of $("content").children) if (el.id !== "import-card") el.hidden = true; }
+
+  // ---- Prices ----
+  const PKEY = "vesimittari-hinnat";
+  let prices = [];
+  try { prices = JSON.parse(localStorage.getItem(PKEY) || "[]") || []; } catch (e) { prices = []; }
+  prices = prices.filter(p => p && (p.meter === "kylma" || p.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(p.from) && isFinite(p.price));
+  const savePrices = () => { try { localStorage.setItem(PKEY, JSON.stringify(prices)); } catch (e) {} };
+  function priceAt(meter, day) {
+    let best = null;
+    for (const p of prices) if (p.meter === meter && p.from <= day && (!best || p.from > best.from)) best = p;
+    return best ? best.price : null;
+  }
+  const hasPrices = () => prices.length > 0;
+  const costOf = (meter, map, d) => { const p = priceAt(meter, d), l = map.get(d); return p == null || l == null ? null : l / 1000 * p; };
+  const eur = (n) => n.toLocaleString("fi-FI", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+  if (!days.length) { $("empty").hidden = false; for (const el of $("content").children) if (el.id !== "import-card" && el.id !== "price-card") el.hidden = true; }
 
   let range = 30;
   for (const b of document.querySelectorAll(".ranges button")) b.onclick = () => {
@@ -215,10 +261,20 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
     $("t-hot").textContent = nh ? fmt(Math.round(sh / nh), 0) : "–";
     $("t-tot").textContent = fmt((sc + sh) / 1000, 2);
     $("t-share").textContent = sc + sh > 0 && nh ? fmt(Math.round(sh / (sc + sh) * 100), 0) + " %" : "–";
+    let missingNote = "";
+    $("cost-tiles").hidden = !hasPrices();
+    if (hasPrices()) {
+      let ec = 0, eh = 0, mc = false, mh = false;
+      for (const d of list) { const a = costOf("kylma", dc, d), b = costOf("lammin", dh, d); if (a != null) { ec += a; } else if (dc.has(d)) mc = true; if (b != null) { eh += b; } else if (dh.has(d)) mh = true; }
+      $("e-cold").textContent = eur(ec) + (mc ? "*" : ""); $("e-hot").textContent = eur(eh) + (mh ? "*" : "");
+      $("e-tot").textContent = eur(ec + eh) + (mc || mh ? "*" : "");
+      $("e-day").textContent = eur((ec + eh) / Math.max(1, list.length));
+      missingNote = mc || mh ? " * Osalle päivistä ei ole hintaa, joten ne puuttuvat euroista." : "";
+    }
 
     const unitT = mode === "day" ? "litraa vuorokaudessa" : mode === "week" ? "viikoittain, keskim. l/vrk" : "kuukausittain, keskim. l/vrk";
     for (const el of document.querySelectorAll(".unit-t")) el.textContent = unitT;
-    $("chart-note").textContent = "Jakso " + fiDate(list[0]) + "–" + fiDate(last) + ". Jos lukemien välissä on useampi päivä, kulutus jaetaan niille tasan.";
+    $("chart-note").textContent = "Jakso " + fiDate(list[0]) + "–" + fiDate(last) + ". Jos lukemien välissä on useampi päivä, kulutus jaetaan niille tasan." + missingNote;
     const bs = buckets(list, mode);
     chart($("chart-c"), bs, mode, "pc", "nc", "bc", "Kylmä", nc ? sc / nc : null, $("avg-c"));
     chart($("chart-h"), bs, mode, "ph", "nh", "bh", "Lämmin", nh ? sh / nh : null, $("avg-h"));
@@ -231,7 +287,7 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
     const tip = wrap.querySelector(".tip");
     wrap.querySelector("svg")?.remove(); tip.hidden = true;
     avgEl.textContent = avg == null ? "" : "keskim. " + fmt(Math.round(avg), 0) + " l/vrk";
-    const W = Math.round(Math.min(680, Math.max(300, wrap.clientWidth || 680))), H = W < 500 ? 180 : 200, L = 40, R = 6, T = 10, B = 26;
+    const W = Math.round(Math.min(680, Math.max(300, wrap.clientWidth || 680))), H = W < 500 ? 180 : 200, L = 40, R = 16, T = 10, B = 26;
     const max = Math.max(1, ...bs.map(b => b[k]));
     const step = niceStep(max), top = Math.ceil(max / step) * step;
     const y = (v) => T + (H - T - B) * (1 - Math.max(0, v) / top);
@@ -245,7 +301,7 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
       if (b[nk] && v > 0) { const yt = y(v), h = Math.max(1, y(0) - yt); s += roundTop(cls, x, y(0) - h, bw, h, r); }
       if (i % every === (bs.length - 1) % every) {
         const lab = mode === "month" ? MONTHS[Number(b.key.slice(5, 7)) - 1] + " " + b.key.slice(2, 4) : short(b.key);
-        const edge = cx + 18 > W - R; s += `<text x="${(edge ? W - R : cx).toFixed(1)}" y="${H - 8}" text-anchor="${edge ? "end" : "middle"}">${lab}</text>`;
+        s += `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle">${lab}</text>`;
       }
     });
     if (avg != null && avg > 0) s += `<line class="avgl" x1="${L}" x2="${W - R}" y1="${y(avg).toFixed(1)}" y2="${y(avg).toFixed(1)}"/>`;
@@ -261,6 +317,7 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
       const head = mode === "day" ? fiDate(b.key) + " (" + new Date(toUTC(b.key)).toLocaleDateString("fi-FI", { weekday: "short", timeZone: "UTC" }) + ")" : mode === "week" ? short(b.start) + "–" + fiDate(b.end) : MONTHS[Number(b.key.slice(5, 7)) - 1] + "kuu " + b.key.slice(0, 4);
       tip.innerHTML = ""; const hd = document.createElement("b"); hd.textContent = head; tip.append(hd);
       const d = document.createElement("div"); d.textContent = b[nk] ? name + " " + fmt(Math.round(b[k]), 0) + unit : "Ei lukemaa"; tip.append(d);
+      if (b[nk] && hasPrices()) { const mt = k === "pc" ? "kylma" : "lammin", mp = k === "pc" ? dc : dh; let e = 0, ok = false; for (let t = toUTC(b.start); t <= toUTC(b.end); t += DAY) { const c = costOf(mt, mp, fromUTC(t)); if (c != null) { e += c; ok = true; } } if (ok) { const n = Math.round((toUTC(b.end) - toUTC(b.start)) / DAY) + 1, x = document.createElement("div"); x.textContent = "≈ " + eur(mode === "day" ? e : e / n) + (mode === "day" ? "" : " / vrk"); tip.append(x); } }
       if (avg && b[nk]) { const e = document.createElement("div"); const diff = Math.round((b[k] / avg - 1) * 100); e.textContent = (diff >= 0 ? "+" : "") + diff + " % keskiarvoon"; tip.append(e); }
       tip.hidden = false;
       const cx = (L + i * slot + slot / 2) * rect.width / W, tw = tip.offsetWidth, ww = wrap.clientWidth;
@@ -280,14 +337,17 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
       const k = d.slice(0, 7);
       if (!m.has(k)) m.set(k, { c: 0, h: 0 });
       const o = m.get(k); o.c += dc.get(d) || 0; o.h += dh.get(d) || 0;
+      const a = costOf("kylma", dc, d), b2 = costOf("lammin", dh, d); o.e = (o.e || 0) + (a || 0) + (b2 || 0);
     }
     const rows = [...m.entries()].sort((a, b) => a[0] < b[0] ? 1 : -1).slice(0, 24);
-    const t = $("months"); t.innerHTML = "<thead><tr><th>Kuukausi</th><th>Kylmä m³</th><th>Lämmin m³</th><th>Yhteensä m³</th></tr></thead>";
+    const t = $("months"); t.innerHTML = "<thead><tr><th>Kuukausi</th><th>Kylmä m³</th><th>Lämmin m³</th><th>Yhteensä m³</th>" + (hasPrices() ? "<th>Hinta</th>" : "") + "</tr></thead>";
     const tb = document.createElement("tbody");
     for (const [k, o] of rows) {
       const tr = document.createElement("tr"), [y, mo] = k.split("-").map(Number);
-      for (const [txt, cls] of [[MONTHS[mo - 1] + "kuu " + y, ""], [fmt(o.c / 1000, 3), ""], [fmt(o.h / 1000, 3), ""], [fmt((o.c + o.h) / 1000, 3), "tot"]]) {
-        const td = document.createElement("td"); td.textContent = txt; if (cls) td.className = cls; tr.append(td);
+      for (const [txt, cls] of [[MONTHS[mo - 1] + "kuu " + y, ""], [fmt(o.c / 1000, 3), ""], [fmt(o.h / 1000, 3), ""], [fmt((o.c + o.h) / 1000, 3), "tot"], ...(hasPrices() ? [[eur(o.e || 0), "tot"]] : [])]) {
+        const td = document.createElement("td"); if (cls) td.className = cls;
+        if (txt === MONTHS[mo - 1] + "kuu " + y) { const a = document.createElement("a"); a.href = "raportti.html?kk=" + k; a.textContent = txt; td.append(a); } else td.textContent = txt;
+        tr.append(td);
       }
       tb.append(tr);
     }
@@ -399,6 +459,37 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
   }
   $("paper").addEventListener("change", onPaper);
   $("paper2").addEventListener("change", onPaper);
+
+  // ---- Price UI ----
+  const NAMES = { kylma: "Kylmä", lammin: "Lämmin" };
+  function renderPrices() {
+    const el = $("price-list"); el.innerHTML = "";
+    if (!prices.length) { const p = document.createElement("p"); p.className = "note"; p.textContent = "Hintoja ei ole vielä syötetty."; el.append(p); return; }
+    for (const pr of [...prices].sort((a, b) => a.meter === b.meter ? (a.from < b.from ? 1 : -1) : (a.meter < b.meter ? -1 : 1))) {
+      const row = document.createElement("div"); row.className = "prow";
+      const sw = document.createElement("span"); sw.className = "sw " + (pr.meter === "kylma" ? "c" : "h");
+      const t = document.createElement("span"); t.textContent = NAMES[pr.meter] + " " + fiDate(pr.from) + " alkaen";
+      const v = document.createElement("span"); v.className = "pr"; v.textContent = pr.price.toLocaleString("fi-FI", { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + " €/m³";
+      const del = document.createElement("button"); del.className = "del"; del.type = "button"; del.textContent = "Poista";
+      del.setAttribute("aria-label", "Poista hinta " + NAMES[pr.meter] + " " + fiDate(pr.from));
+      del.onclick = () => {
+        if (!del.classList.contains("armed")) { del.classList.add("armed"); del.textContent = "Vahvista"; setTimeout(() => { del.classList.remove("armed"); del.textContent = "Poista"; }, 3000); return; }
+        prices = prices.filter(x => x !== pr); savePrices(); renderPrices(); render();
+      };
+      row.append(sw, t, v, del); el.append(row);
+    }
+  }
+  $("p-from").value = days[0] || new Date().toISOString().slice(0, 10);
+  $("p-add").onclick = () => {
+    const meter = $("p-meter").value, from = $("p-from").value, raw = $("p-price").value.trim().replace(/\s/g, "").replace(",", ".");
+    if (!from) { $("p-from").focus(); return; }
+    if (!/^\d+(\.\d+)?$/.test(raw) || Number(raw) <= 0) { $("p-price").focus(); $("p-price").setCustomValidity("Kirjoita hinta, esim. 5,90"); $("p-price").reportValidity(); return; }
+    $("p-price").setCustomValidity("");
+    prices = prices.filter(x => !(x.meter === meter && x.from === from)).concat({ meter, from, price: Number(raw) });
+    savePrices(); $("p-price").value = ""; renderPrices(); render();
+  };
+  $("p-price").addEventListener("input", () => $("p-price").setCustomValidity(""));
+  renderPrices();
 
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 150); });
   render();
