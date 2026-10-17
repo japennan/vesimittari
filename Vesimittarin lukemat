@@ -1,0 +1,355 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: https://japennan.github.io/vesimittari/
+Subject: Vesimittarin lukemat
+Date: Sat, 17 Oct 2026 18:29:12 GMT
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--2LYzka514QU8gdchRml2oFMof9vEaqCrAkwSkKelVn----"
+
+
+------MultipartBoundary--2LYzka514QU8gdchRml2oFMof9vEaqCrAkwSkKelVn----
+Content-Type: text/html
+Content-ID: <frame-9F608E5CDFF7108360BC0B7C31E444A2@mhtml.blink>
+Content-Transfer-Encoding: binary
+Content-Location: https://japennan.github.io/vesimittari/
+
+<!DOCTYPE html><html lang="fi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><link rel="stylesheet" type="text/css" href="cid:css-4715f1e0-5daa-4ed1-86dd-44d6d0f65e87@mhtml.blink" />
+
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vesimittarin lukemat</title>
+<link rel="manifest" href="https://japennan.github.io/vesimittari/manifest.webmanifest">
+<link rel="icon" href="https://japennan.github.io/vesimittari/icon-192.png">
+<link rel="apple-touch-icon" href="https://japennan.github.io/vesimittari/icon-192.png">
+<meta name="theme-color" content="#eef2f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10171b" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Public+Sans:wght@400;500;600;700&amp;display=swap">
+
+</head>
+<body>
+<header class="appbar"><div class="appbar-in"><h1>Vesimittari</h1><span class="sync" id="sync">Vain tällä laitteella</span></div></header>
+<div class="wrap">
+
+  <div class="seg" role="group" aria-label="Mittari">
+    <button type="button" id="m-kylma" aria-pressed="true"><span class="dot"></span>Kylmä vesi</button>
+    <button type="button" id="m-lammin" aria-pressed="false"><span class="dot"></span>Lämmin vesi</button>
+  </div>
+
+  <section class="card">
+    <div class="top"><h2 id="meter-title">Kylmä vesi · viimeisin lukema</h2><span class="sub" id="latest-when">17.10.2026</span></div>
+    <div class="drum" id="drum"><span>0</span><span>0</span><span>2</span><span>1</span><span>2</span><span class="r">9</span><span class="r">1</span><span class="r">5</span><span class="unit">m³</span></div>
+    <div class="stats">
+      <div class="stat"><b id="s-day">49</b><small>l / vrk, viim.</small></div>
+      <div class="stat"><b id="s-week">33</b><small>l / vrk, 7 vrk ka.</small></div>
+      <div class="stat"><b id="s-month">0,598</b><small>m³ tässä kuussa</small></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Uusi lukema</h2>
+    <div class="btn pick">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+      Ota kuva mittarista
+      <input type="file" id="photo" accept="image/*" capture="environment" aria-label="Ota kuva mittarista">
+    </div>
+    <label class="gal" for="photo3">tai valitse kuva galleriasta</label>
+    <input type="file" id="photo3" accept="image/*" class="vh">
+    <p class="hint" id="shoot-hint">Voit kuvata molemmat mittarit samaan kuvaan. Lukema tunnistetaan kuvasta, ja voit korjata sen ennen tallennusta.</p>
+    
+    
+    
+    
+    <div class="row">
+      <label class="f" for="value">Lukema (m³)<input type="text" id="value" inputmode="decimal" autocomplete="off" placeholder="esim. 123,456"></label>
+      <label class="f" for="date">Päivä<input type="date" id="date"></label>
+    </div>
+    
+    <button class="btn" type="button" id="save">Tallenna lukema</button>
+  </section>
+
+  <section class="card chart" id="chart-card">
+    <h2>Kulutus, litraa vuorokaudessa</h2>
+    <div id="chart"><svg viewBox="0 0 520 200" role="img" aria-label="Kulutus litraa vuorokaudessa"><line class="grid" x1="36" x2="512" y1="172" y2="172"></line><text x="30" y="176" text-anchor="end">0</text><line class="grid" x1="36" x2="512" y1="118.66666666666669" y2="118.66666666666669"></line><text x="30" y="122.66666666666669" text-anchor="end">20</text><line class="grid" x1="36" x2="512" y1="65.33333333333334" y2="65.33333333333334"></line><text x="30" y="69.33333333333334" text-anchor="end">40</text><line class="grid" x1="36" x2="512" y1="12" y2="12"></line><text x="30" y="16" text-anchor="end">60</text><rect class="bar" x="42.1" y="116.0" width="21.8" height="56.0" rx="2"><title>4.10.2026: 21 l/vrk</title></rect><rect class="bar" x="76.1" y="57.3" width="21.8" height="114.7" rx="2"><title>5.10.2026: 43 l/vrk</title></rect><text x="87.0" y="192" text-anchor="middle">5.10.</text><rect class="bar" x="110.1" y="94.7" width="21.8" height="77.3" rx="2"><title>6.10.2026: 29 l/vrk</title></rect><rect class="bar" x="144.1" y="54.7" width="21.8" height="117.3" rx="2"><title>7.10.2026: 44 l/vrk</title></rect><text x="155.0" y="192" text-anchor="middle">7.10.</text><rect class="bar" x="178.1" y="97.3" width="21.8" height="74.7" rx="2"><title>8.10.2026: 28 l/vrk</title></rect><rect class="bar" x="212.1" y="78.7" width="21.8" height="93.3" rx="2"><title>9.10.2026: 35 l/vrk</title></rect><text x="223.0" y="192" text-anchor="middle">9.10.</text><rect class="bar" x="246.1" y="65.3" width="21.8" height="106.7" rx="2"><title>10.10.2026: 40 l/vrk</title></rect><rect class="bar" x="280.1" y="84.0" width="21.8" height="88.0" rx="2"><title>11.10.2026: 33 l/vrk</title></rect><text x="291.0" y="192" text-anchor="middle">11.10.</text><rect class="bar" x="314.1" y="105.3" width="21.8" height="66.7" rx="2"><title>12.10.2026: 25 l/vrk</title></rect><rect class="bar" x="348.1" y="73.3" width="21.8" height="98.7" rx="2"><title>13.10.2026: 37 l/vrk</title></rect><text x="359.0" y="192" text-anchor="middle">13.10.</text><rect class="bar" x="382.1" y="97.3" width="21.8" height="74.7" rx="2"><title>14.10.2026: 28 l/vrk</title></rect><rect class="bar" x="416.1" y="86.7" width="21.8" height="85.3" rx="2"><title>15.10.2026: 32 l/vrk</title></rect><text x="427.0" y="192" text-anchor="middle">15.10.</text><rect class="bar" x="450.1" y="92.0" width="21.8" height="80.0" rx="2"><title>16.10.2026: 30 l/vrk</title></rect><rect class="bar last" x="484.1" y="41.3" width="21.8" height="130.7" rx="2"><title>17.10.2026: 49 l/vrk</title></rect><text x="495.0" y="192" text-anchor="middle">17.10.</text></svg></div>
+  </section>
+
+  <section class="card">
+    <div class="top"><h2>Viimeisimmät lukemat</h2><a class="hist" href="https://japennan.github.io/vesimittari/historia.html">Kaaviot →</a></div>
+    <div id="list"><div class="item tap"><div class="d">17.10.2026<small>la · tuotu</small></div><div class="v">212,915<small>+49 l</small></div><button class="del" type="button">Poista</button></div><div class="item tap"><div class="d">16.10.2026<small>pe · tuotu</small></div><div class="v">212,866<small>+30 l</small></div><button class="del" type="button">Poista</button></div><div class="item tap"><div class="d">15.10.2026<small>to · tuotu</small></div><div class="v">212,836<small>+32 l</small></div><button class="del" type="button">Poista</button></div><div class="item tap"><div class="d">14.10.2026<small>ke · tuotu</small></div><div class="v">212,804<small>+28 l</small></div><button class="del" type="button">Poista</button></div><div class="item tap"><div class="d">13.10.2026<small>ti · tuotu</small></div><div class="v">212,776<small>+37 l</small></div><button class="del" type="button">Poista</button></div><div class="item tap"><div class="d">12.10.2026<small>ma · tuotu</small></div><div class="v">212,739<small>+25 l</small></div><button class="del" type="button">Poista</button></div><div class="item tap"><div class="d">11.10.2026<small>su · tuotu</small></div><div class="v">212,714<small>+33 l</small></div><button class="del" type="button">Poista</button></div><button type="button" class="btn ghost small" style="margin-top: 8px;">Näytä lisää (26 vanhempaa)</button></div>
+  </section>
+
+</div>
+
+
+
+
+<nav class="tabbar" aria-label="Päävalikko"><a href="https://japennan.github.io/vesimittari/" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg><span>Lukema</span></a><a href="https://japennan.github.io/vesimittari/historia.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg><span>Historia</span></a><a href="https://japennan.github.io/vesimittari/raportti.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"></path><path d="M14 3v4h4M9 12h6M9 16h6"></path></svg><span>Raportti</span></a><a href="https://japennan.github.io/vesimittari/asetukset.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg><span>Asetukset</span></a></nav>
+
+
+
+</body></html>
+------MultipartBoundary--2LYzka514QU8gdchRml2oFMof9vEaqCrAkwSkKelVn----
+Content-Type: text/css
+Content-Transfer-Encoding: binary
+Content-Location: https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap
+
+@charset "utf-8";
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 500; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3nWuYMBYrp0xg.woff2") format("woff2"); unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB; }
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 500; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3jWuYMBYrp0xg.woff2") format("woff2"); unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 500; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3bWuYMBYro.woff2") format("woff2"); unicode-range: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 600; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3nWuYMBYrp0xg.woff2") format("woff2"); unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB; }
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 600; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3jWuYMBYrp0xg.woff2") format("woff2"); unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 600; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3bWuYMBYro.woff2") format("woff2"); unicode-range: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 700; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3nWuYMBYrp0xg.woff2") format("woff2"); unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB; }
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 700; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3jWuYMBYrp0xg.woff2") format("woff2"); unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 700; font-display: swap; src: url("https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3bWuYMBYro.woff2") format("woff2"); unicode-range: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNJfJ7QwOk1Fig.woff2") format("woff2"); unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNIfJ7QwOk1Fig.woff2") format("woff2"); unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNGfJ7QwOk1.woff2") format("woff2"); unicode-range: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNJfJ7QwOk1Fig.woff2") format("woff2"); unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNIfJ7QwOk1Fig.woff2") format("woff2"); unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNGfJ7QwOk1.woff2") format("woff2"); unicode-range: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNJfJ7QwOk1Fig.woff2") format("woff2"); unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNIfJ7QwOk1Fig.woff2") format("woff2"); unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNGfJ7QwOk1.woff2") format("woff2"); unicode-range: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNJfJ7QwOk1Fig.woff2") format("woff2"); unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNIfJ7QwOk1Fig.woff2") format("woff2"); unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("https://fonts.gstatic.com/s/publicsans/v21/ijwRs572Xtc6ZYQws9YVwnNGfJ7QwOk1.woff2") format("woff2"); unicode-range: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+------MultipartBoundary--2LYzka514QU8gdchRml2oFMof9vEaqCrAkwSkKelVn----
+Content-Type: text/css
+Content-Transfer-Encoding: binary
+Content-Location: cid:css-4715f1e0-5daa-4ed1-86dd-44d6d0f65e87@mhtml.blink
+
+@charset "utf-8";
+
+:root { --bg: #eef2f4; --surface: #ffffff; --fg: #16232b; --muted: #5d6f79; --line: #d3dde2; --cold: #1f6fb2; --cold-soft: #dcebf7; --warm: #c8402c; --warm-soft: #f8e1dc; --drum: #1b2329; --drum-fg: #f4f6f7; --drum-red: #d63a26; --ok: #2e7d4f; --warn: #a96500; --f-digit: "Barlow Condensed", "Arial Narrow", sans-serif; --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --accent: var(--cold); --accent-soft: var(--cold-soft); color-scheme: light; }
+
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #10171b; --surface: #182228; --fg: #e5ecef; --muted: #93a5ae; --line: #2a3840; --cold: #5aa7e6; --cold-soft: #17324a; --warm: #f07a63; --warm-soft: #3d1f1a; --drum: #0a0f12; --drum-fg: #eef2f4; --drum-red: #ff5a42; --ok: #5cc48a; --warn: #e2a64a; color-scheme: dark; }
+}
+
+* { box-sizing: border-box; }
+
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+body.warm { --accent: var(--warm); --accent-soft: var(--warm-soft); }
+
+body { margin: 0px; background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 40px; }
+
+[hidden] { display: none !important; }
+
+.gal { align-self: center; font-size: 14px; font-weight: 600; color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+.vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+
+.hist { font-weight: 600; font-size: 14px; color: var(--accent); text-decoration: none; }
+
+img { max-width: 100%; }
+
+.wrap { max-width: 560px; margin: 0px auto; display: flex; flex-direction: column; gap: 16px; }
+
+h1 { font-family: var(--f-digit); font-weight: 700; font-size: 28px; margin: 0px; }
+
+h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+.sub { color: var(--muted); font-size: 13px; }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
+
+.seg button { font: 600 15px var(--f-body); border: 0px; border-radius: 9px; padding: 10px; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+.seg .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+#m-kylma .dot { background: var(--cold); }
+
+#m-lammin .dot { background: var(--warm); }
+
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--fg); }
+
+button:focus-visible, input:focus-visible, label.btn:focus-within, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.drum { display: flex; gap: 3px; background: var(--drum); padding: 8px; border-radius: 8px; width: max-content; max-width: 100%; overflow-x: auto; }
+
+.drum span { font-family: var(--f-digit); font-weight: 600; font-size: 38px; line-height: 1; color: var(--drum-fg); background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.25)); padding: 6px 5px; min-width: 26px; text-align: center; border-radius: 3px; font-variant-numeric: tabular-nums; }
+
+.drum span.r { color: rgb(255, 255, 255); background-color: var(--drum-red); }
+
+.drum .unit { background: none; font-size: 18px; align-self: flex-end; padding: 0px 4px 4px; min-width: 0px; }
+
+.drum.empty span { color: rgba(255, 255, 255, 0.25); }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+.stat b { display: block; font-family: var(--f-digit); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.stat small { color: var(--muted); font-size: 12px; }
+
+.btn { font: 600 16px var(--f-body); display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 10px; padding: 14px 16px; border: 0px; cursor: pointer; background: var(--accent); color: rgb(255, 255, 255); text-align: center; }
+
+.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+
+.btn.small { padding: 8px 12px; font-size: 14px; }
+
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.btn svg { width: 22px; height: 22px; flex: 0 0 auto; }
+
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.row > * { flex: 1 1 140px; min-width: 0px; }
+
+.pick { position: relative; overflow: hidden; }
+
+#photo { position: absolute; inset: 0px; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+
+.pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.confirm { display: flex; flex-direction: column; gap: 10px; }
+
+.confirm .ask { margin: 0px; font-weight: 600; }
+
+#photo2 { position: absolute; inset: 0px; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+
+.preview.big { grid-template-columns: 1fr; }
+
+.preview.big img { width: 100%; height: auto; max-height: 60vh; object-fit: contain; background: var(--bg); }
+
+.preview { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; }
+
+.preview img { width: 96px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+
+.status .note { color: var(--muted); font-size: 13px; display: block; margin-top: 4px; }
+
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--fg); }
+
+.pill.low { background: var(--warm-soft); }
+
+.both { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+
+.dotk, .dotl { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--cold); }
+
+.dotl { background: var(--warm); }
+
+input[type="password"] { font: 500 16px var(--f-body); padding: 13px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); width: 100%; }
+
+.status { font-size: 14px; }
+
+.status.err { color: var(--warm); }
+
+.hint { font-size: 13px; color: var(--muted); margin: 0px; }
+
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
+
+input[type="text"], input[type="date"], input[type="url"] { font-style: ; font-variant-ligatures: ; font-variant-caps: ; font-variant-east-asian: ; font-variant-alternates: ; font-variant-position: ; font-variant-emoji: ; font-weight: ; font-stretch: ; font-size: ; line-height: ; font-family: ; font-optical-sizing: ; font-size-adjust: ; font-kerning: ; font-feature-settings: ; font-variation-settings: ; font-language-override: ; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); width: 100%; font-variant-numeric: tabular-nums; }
+
+input[type="date"], input[type="url"] { font: 500 16px var(--f-body); padding: 13px 12px; }
+
+textarea { width: 100%; height: 160px; font: 12px ui-monospace, Menlo, Consolas, monospace; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+
+.warnbox { font-size: 13px; color: var(--warn); }
+
+ol.steps { margin: 0px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+
+.sync { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+
+.sync.on { color: var(--ok); }
+
+.chart svg { width: 100%; height: auto; display: block; }
+
+.chart text { fill: var(--muted); font: 11px var(--f-body); }
+
+.chart .grid { stroke: var(--line); }
+
+.chart .bar { fill: var(--accent); }
+
+.chart .bar.last { fill: var(--fg); }
+
+.editbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 14px; font-weight: 600; }
+
+.item.tap { cursor: pointer; border-radius: 8px; }
+
+.item.tap:active { background: var(--accent-soft); }
+
+.item.editing { background: var(--accent-soft); margin: 0px -8px; padding-left: 8px; padding-right: 8px; }
+
+.item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 10px 0px; border-top: 1px solid var(--line); }
+
+.item:first-child { border-top: 0px; }
+
+.item .d { font-size: 14px; font-weight: 600; }
+
+.item small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; font-family: var(--f-body); }
+
+.item .v { font-family: var(--f-digit); font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+.del { border: 0px; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; font: 600 12px var(--f-body); }
+
+.del.armed { color: rgb(255, 255, 255); background: var(--warm); }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
+
+@media (max-width: 380px) {
+  .drum span { font-size: 30px; min-width: 20px; }
+}
+
+html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+
+body { padding-top: 0px !important; padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important; }
+
+body::before { content: ""; position: fixed; inset: 0px 0px auto; height: env(safe-area-inset-top, 0px); z-index: 31; background: var(--bg); }
+
+.appbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 8px calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); background: var(--bg); border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+
+.appbar.scrolled { border-bottom-color: var(--line); }
+
+.appbar h1 { font-family: var(--f-digit); font-weight: 700; font-size: 26px; margin: 0px; line-height: 1.1; }
+
+.appbar-in { max-width: 720px; width: 100%; margin: 0px auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.tabbar { position: fixed; left: 0px; right: 0px; bottom: 0px; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+
+.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: var(--muted); font: 600 11.5px var(--f-body); padding: 4px 0px; user-select: none; }
+
+.tabbar a svg { width: 22px; height: 22px; padding: 4px 18px; border-radius: 999px; box-sizing: content-box; transition: background 0.15s; }
+
+.tabbar a[aria-current="page"] { color: var(--fg); }
+
+.tabbar a[aria-current="page"] svg { background: var(--cold-soft, #dcebf7); color: var(--cold, #1f6fb2); }
+
+.tabbar a:focus-visible { outline: 2px solid var(--cold, #1f6fb2); outline-offset: -2px; border-radius: 12px; }
+
+button, .btn, .seg button { user-select: none; }
+
+.btn:active, .seg button:active, .ranges button:active { transform: scale(0.98); }
+
+.toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
+
+@media print {
+  .appbar, .tabbar { display: none !important; }
+  body { padding-bottom: 0px !important; }
+}
+------MultipartBoundary--2LYzka514QU8gdchRml2oFMof9vEaqCrAkwSkKelVn------
