@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vesimittarin historia</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1f6fb2">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #eef2f4; --surface: #ffffff; --fg: #16232b; --muted: #5d6f79; --line: #d3dde2; --grid: #e6ecef;
+  --cold: #1f6fb2; --hot: #c8402c; --cold-soft: #dcebf7;
+  --f-digit: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #10171b; --surface: #182228; --fg: #e5ecef; --muted: #93a5ae; --line: #2a3840; --grid: #223038;
+          --cold: #4596d6; --hot: #e4644d; --cold-soft: #17324a; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 40px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-family: var(--f-digit); font-weight: 700; font-size: 28px; margin: 0; }
+h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0; }
+a { color: var(--cold); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.back { font-weight: 600; text-decoration: none; font-size: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ranges { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
+.ranges button { font: 600 14px var(--f-body); border: 0; border-radius: 9px; padding: 9px 4px; background: transparent; color: var(--muted); cursor: pointer; }
+.ranges button[aria-pressed="true"] { background: var(--cold-soft); color: var(--fg); }
+button:focus-visible { outline: 2px solid var(--cold); outline-offset: 2px; }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 520px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+.tile b { display: block; font-family: var(--f-digit); font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile small { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.sw.c { background: var(--cold); } .sw.h { background: var(--hot); }
+.legend { display: flex; gap: 16px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.chartwrap { position: relative; }
+.chartwrap svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.chartwrap text { fill: var(--muted); font: 11px var(--f-body); font-variant-numeric: tabular-nums; }
+.gridl { stroke: var(--grid); stroke-width: 1; }
+.base { stroke: var(--line); stroke-width: 1; }
+.bc { fill: var(--cold); } .bh { fill: var(--hot); }
+.hl { fill: var(--fg); opacity: .06; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; z-index: 2; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip div { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; }
+td.tot { font-weight: 700; }
+.btn { font: 600 15px var(--f-body); border-radius: 10px; padding: 12px 16px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+.empty { text-align: center; padding: 24px 8px; }
+textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+.row2 { display: flex; gap: 8px; flex-wrap: wrap; } .row2 .btn { flex: 1 1 140px; }
+.btn.primary { background: var(--cold); color: #fff; border-color: var(--cold); }
+.btn:disabled { opacity: .5; }
+.bad { color: var(--hot); }
+.pick { position: relative; overflow: hidden; text-align: center; }
+#paper { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Vesimittarin historia</h1>
+    <a class="back" href="./">← Lukemat</a>
+  </div>
+
+  <div class="card empty" id="empty" hidden>
+    <p>Historiassa ei ole vielä mitään näytettävää. Kulutus lasketaan kahden lukeman erotuksesta, joten tallenna vähintään kaksi lukemaa eri päiville.</p>
+    <p><a href="./">Siirry tallentamaan lukema</a></p>
+  </div>
+
+  <div id="content" style="display:flex;flex-direction:column;gap:16px">
+    <div class="ranges" role="group" aria-label="Aikaväli">
+      <button type="button" data-r="30" aria-pressed="true">30 vrk</button>
+      <button type="button" data-r="90" aria-pressed="false">90 vrk</button>
+      <button type="button" data-r="365" aria-pressed="false">1 vuosi</button>
+      <button type="button" data-r="0" aria-pressed="false">Kaikki</button>
+    </div>
+
+    <section class="card">
+      <div class="tiles">
+        <div class="tile"><b id="t-cold">–</b><small><span class="sw c"></span>Kylmä, l/vrk</small></div>
+        <div class="tile"><b id="t-hot">–</b><small><span class="sw h"></span>Lämmin, l/vrk</small></div>
+        <div class="tile"><b id="t-tot">–</b><small>Yhteensä, m³</small></div>
+        <div class="tile"><b id="t-share">–</b><small>Lämpimän osuus</small></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="top">
+        <h2 id="chart-title">Kulutus, litraa vuorokaudessa</h2>
+        <div class="legend"><span><span class="sw c"></span>Kylmä</span><span><span class="sw h"></span>Lämmin</span></div>
+      </div>
+      <div class="chartwrap" id="chartwrap"><div class="tip" id="tip" hidden></div></div>
+      <p class="note" id="chart-note"></p>
+    </section>
+
+    <section class="card">
+      <h2>Kuukausittain</h2>
+      <div class="tablewrap"><table id="months"></table></div>
+      <p class="note">Kuukauden kulutus lasketaan lukemien välillä tasaisesti jaettuna. Ensimmäinen ja viimeinen kuukausi voivat olla vajaita.</p>
+    </section>
+
+    <section class="card" id="import-card">
+      <h2>Tuo vanhat lukemat</h2>
+      <p class="note">Liitä tai kirjoita yksi päivä riville: päivämäärä, kylmän lukema ja lämpimän lukema. Erota luvut välilyönnillä. Jos tiedossa on vain yksi mittari, kirjoita rivin alkuun <b>kylmä</b> tai <b>lämmin</b>.</p>
+      <div class="btn pick" id="paper-btn">Kuvaa käsin kirjoitettu paperi<input type="file" id="paper" accept="image/*" aria-label="Kuvaa käsin kirjoitettu paperi"></div>
+      <textarea id="imp" rows="7" placeholder="1.10.2026 205,310 67,120&#10;2.10.2026 205,560 67,230&#10;lämmin 3.10.2026 67,340"></textarea>
+      <div class="note" id="imp-msg"></div>
+      <div class="row2">
+        <button class="btn" type="button" id="imp-check">Tarkista</button>
+        <button class="btn primary" type="button" id="imp-save" disabled>Tallenna lukemat</button>
+      </div>
+    </section>
+
+    <button class="btn" type="button" id="csv">Lataa lukemat CSV-tiedostona</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let all = [];
+  try { all = JSON.parse(localStorage.getItem("vesimittari-lukemat") || "[]") || []; } catch (e) { all = []; }
+  all = all.filter(r => r && (r.meter === "kylma" || r.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && isFinite(r.value));
+
+  const fmt = (n, d) => n.toLocaleString("fi-FI", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const toUTC = (s) => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+  const fromUTC = (t) => new Date(t).toISOString().slice(0, 10);
+  const DAY = 86400000;
+  const fiDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return d + "." + m + "." + y; };
+  const short = (iso) => { const [, m, d] = iso.split("-").map(Number); return d + "." + m + "."; };
+  const MONTHS = ["tammi", "helmi", "maalis", "huhti", "touko", "kesä", "heinä", "elo", "syys", "loka", "marras", "joulu"];
+
+  // Spread each interval's consumption evenly over its days: map date -> liters
+  function daily(meter) {
+    const rs = all.filter(r => r.meter === meter).sort((a, b) => a.date < b.date ? -1 : 1), out = new Map();
+    for (let i = 1; i < rs.length; i++) {
+      const a = toUTC(rs[i - 1].date), b = toUTC(rs[i].date), n = Math.round((b - a) / DAY);
+      if (n <= 0) continue;
+      const per = (rs[i].value - rs[i - 1].value) * 1000 / n;
+      for (let k = 1; k <= n; k++) out.set(fromUTC(a + k * DAY), per);
+    }
+    return out;
+  }
+  const dc = daily("kylma"), dh = daily("lammin");
+  const days = [...new Set([...dc.keys(), ...dh.keys()])].sort();
+
+  if (!days.length) { $("empty").hidden = false; for (const el of $("content").children) if (el.id !== "import-card") el.hidden = true; }
+
+  let range = 30;
+  for (const b of document.querySelectorAll(".ranges button")) b.onclick = () => {
+    range = Number(b.dataset.r);
+    for (const x of document.querySelectorAll(".ranges button")) x.setAttribute("aria-pressed", String(x === b));
+    render();
+  };
+
+  function buckets(list, mode) {
+    const map = new Map();
+    for (const d of list) {
+      let key, label;
+      if (mode === "day") { key = d; }
+      else if (mode === "week") { const t = toUTC(d), wd = (new Date(t).getUTCDay() + 6) % 7; key = fromUTC(t - wd * DAY); }
+      else { key = d.slice(0, 7) + "-01"; }
+      if (!map.has(key)) map.set(key, { key, start: d, end: d, c: 0, h: 0, nc: 0, nh: 0, n: 0 });
+      const b = map.get(key); b.end = d; b.n++;
+      if (dc.has(d)) { b.c += dc.get(d); b.nc++; }
+      if (dh.has(d)) { b.h += dh.get(d); b.nh++; }
+    }
+    return [...map.values()].map(b => ({ ...b, pc: b.nc ? b.c / b.nc : 0, ph: b.nh ? b.h / b.nh : 0 }));
+  }
+
+  function render() {
+    if (!days.length) return;
+    const last = days[days.length - 1];
+    const from = range ? fromUTC(toUTC(last) - (range - 1) * DAY) : days[0];
+    const list = days.filter(d => d >= from);
+    const span = list.length;
+    const mode = span <= 92 ? "day" : span <= 400 ? "week" : "month";
+
+    // tiles
+    const sum = (m) => list.reduce((s, d) => s + (m.get(d) || 0), 0), cnt = (m) => list.filter(d => m.has(d)).length;
+    const sc = sum(dc), sh = sum(dh), nc = cnt(dc), nh = cnt(dh);
+    $("t-cold").textContent = nc ? fmt(Math.round(sc / nc), 0) : "–";
+    $("t-hot").textContent = nh ? fmt(Math.round(sh / nh), 0) : "–";
+    $("t-tot").textContent = fmt((sc + sh) / 1000, 2);
+    $("t-share").textContent = sc + sh > 0 && nh ? fmt(Math.round(sh / (sc + sh) * 100), 0) + " %" : "–";
+
+    $("chart-title").textContent = mode === "day" ? "Kulutus, litraa vuorokaudessa" : mode === "week" ? "Kulutus viikoittain, keskim. l/vrk" : "Kulutus kuukausittain, keskim. l/vrk";
+    $("chart-note").textContent = "Jakso " + fiDate(list[0]) + "–" + fiDate(last) + ". Jos lukemien välissä on useampi päivä, kulutus jaetaan niille tasan.";
+    chart(buckets(list, mode), mode);
+    table();
+  }
+
+  function niceStep(max) { const raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+
+  function chart(bs, mode) {
+    const wrap = $("chartwrap"), tip = $("tip");
+    wrap.querySelector("svg")?.remove();
+    const W = 680, H = 260, L = 44, R = 8, T = 10, B = 28;
+    const max = Math.max(1, ...bs.map(b => b.pc + b.ph));
+    const step = niceStep(max), top = Math.ceil(max / step) * step;
+    const y = (v) => T + (H - T - B) * (1 - v / top);
+    const slot = (W - L - R) / bs.length, bw = Math.max(2, Math.min(28, slot * .7));
+    const ns = "http://www.w3.org/2000/svg";
+    let s = `<svg xmlns="${ns}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${$("chart-title").textContent}">`;
+    for (let g = 0; g <= top + 1e-9; g += step) s += `<line class="gridl" x1="${L}" x2="${W - R}" y1="${y(g).toFixed(1)}" y2="${y(g).toFixed(1)}"/><text x="${L - 6}" y="${(y(g) + 4).toFixed(1)}" text-anchor="end">${fmt(g, 0)}</text>`;
+    s += `<rect class="hl" id="hl" x="0" y="${T}" width="${slot.toFixed(1)}" height="${H - T - B}" visibility="hidden"/>`;
+    const r = Math.min(4, bw / 2), every = Math.max(1, Math.ceil(bs.length / (W < 500 ? 5 : 7)));
+    bs.forEach((b, i) => {
+      const cx = L + i * slot + slot / 2, x = cx - bw / 2, base = y(0);
+      const yc = y(b.pc), yh = y(b.pc + b.ph);
+      const hc = Math.max(0, base - yc), hh = Math.max(0, yc - yh - (b.pc > 0 && b.ph > 0 ? 2 : 0));
+      // cold at bottom (square ends), hot on top with rounded top; if one series, round its top
+      if (hc > 0) s += b.ph > 0 ? `<rect class="bc" x="${x.toFixed(1)}" y="${yc.toFixed(1)}" width="${bw.toFixed(1)}" height="${hc.toFixed(1)}"/>` : roundTop("bc", x, yc, bw, hc, r);
+      if (hh > 0) s += roundTop("bh", x, yh, bw, hh, r);
+      if (i % every === (bs.length - 1) % every) {
+        const lab = mode === "month" ? MONTHS[Number(b.key.slice(5, 7)) - 1] + (b.key.slice(5, 7) === "01" || i === (bs.length - 1) % every ? " " + b.key.slice(2, 4) : "") : short(b.key);
+        s += `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle">${lab}</text>`;
+      }
+    });
+    s += `<line class="base" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>`;
+    s += `<rect id="hit" x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent"/></svg>`;
+    wrap.insertAdjacentHTML("beforeend", s);
+    const svg = wrap.querySelector("svg"), hl = svg.getElementById("hl");
+
+    function show(ev) {
+      const rect = svg.getBoundingClientRect(), px = (ev.clientX - rect.left) * W / rect.width;
+      const i = Math.floor((px - L) / slot);
+      if (i < 0 || i >= bs.length) return hide();
+      const b = bs[i];
+      hl.setAttribute("x", (L + i * slot).toFixed(1)); hl.setAttribute("visibility", "visible");
+      const head = mode === "day" ? fiDate(b.key) : mode === "week" ? short(b.start) + "–" + fiDate(b.end) : MONTHS[Number(b.key.slice(5, 7)) - 1] + "kuu " + b.key.slice(0, 4);
+      const unit = mode === "day" ? " l" : " l/vrk";
+      tip.innerHTML = "";
+      const h = document.createElement("b"); h.textContent = head; tip.append(h);
+      const row = (cls, name, v) => { const d = document.createElement("div"); const sw = document.createElement("span"); sw.className = "sw " + cls; d.append(sw, name + " " + fmt(Math.round(v), 0) + unit); tip.append(d); };
+      row("c", "Kylmä", b.pc); row("h", "Lämmin", b.ph);
+      const t = document.createElement("div"); t.textContent = "Yhteensä " + fmt(Math.round(b.pc + b.ph), 0) + unit; tip.append(t);
+      tip.hidden = false;
+      const cx = (L + i * slot + slot / 2) * rect.width / W, tw = tip.offsetWidth, ww = wrap.clientWidth;
+      tip.style.left = Math.max(0, Math.min(ww - tw, cx - tw / 2)) + "px";
+      tip.style.top = "0px";
+    }
+    function hide() { tip.hidden = true; hl.setAttribute("visibility", "hidden"); }
+    svg.addEventListener("pointermove", show);
+    svg.addEventListener("pointerdown", show);
+    svg.addEventListener("pointerleave", hide);
+  }
+  function roundTop(cls, x, y, w, h, r) {
+    r = Math.min(r, h);
+    return `<path class="${cls}" d="M${x.toFixed(1)},${(y + h).toFixed(1)} V${(y + r).toFixed(1)} Q${x.toFixed(1)},${y.toFixed(1)} ${(x + r).toFixed(1)},${y.toFixed(1)} H${(x + w - r).toFixed(1)} Q${(x + w).toFixed(1)},${y.toFixed(1)} ${(x + w).toFixed(1)},${(y + r).toFixed(1)} V${(y + h).toFixed(1)} Z"/>`;
+  }
+
+  function table() {
+    const m = new Map();
+    for (const d of days) {
+      const k = d.slice(0, 7);
+      if (!m.has(k)) m.set(k, { c: 0, h: 0 });
+      const o = m.get(k); o.c += dc.get(d) || 0; o.h += dh.get(d) || 0;
+    }
+    const rows = [...m.entries()].sort((a, b) => a[0] < b[0] ? 1 : -1).slice(0, 24);
+    const t = $("months"); t.innerHTML = "<thead><tr><th>Kuukausi</th><th>Kylmä m³</th><th>Lämmin m³</th><th>Yhteensä m³</th></tr></thead>";
+    const tb = document.createElement("tbody");
+    for (const [k, o] of rows) {
+      const tr = document.createElement("tr"), [y, mo] = k.split("-").map(Number);
+      for (const [txt, cls] of [[MONTHS[mo - 1] + "kuu " + y, ""], [fmt(o.c / 1000, 3), ""], [fmt(o.h / 1000, 3), ""], [fmt((o.c + o.h) / 1000, 3), "tot"]]) {
+        const td = document.createElement("td"); td.textContent = txt; if (cls) td.className = cls; tr.append(td);
+      }
+      tb.append(tr);
+    }
+    t.append(tb);
+  }
+
+  $("csv").onclick = () => {
+    const names = { kylma: "Kylmä", lammin: "Lämmin" };
+    const rows = [...all].sort((a, b) => a.meter === b.meter ? (a.date < b.date ? -1 : 1) : (a.meter < b.meter ? -1 : 1));
+    const csv = "﻿Mittari;Päivä;Lukema m3;Lähde\n" + rows.map(r => [names[r.meter], r.date, String(r.value).replace(".", ","), r.source || ""].join(";")).join("\n") + "\n";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = "vesimittari-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+  if (!all.length) $("csv").hidden = true;
+
+  // ---- Import ----
+  let parsed = [];
+  function parseLines(text) {
+    const ok = [], bad = [], yearNow = new Date().getFullYear();
+    const num = (t) => { const v = t.replace(",", "."); return /^\d+(\.\d+)?$/.test(v) ? Number(v) : null; };
+    text.split(/\r?\n/).forEach((line, i) => {
+      const raw = line.trim(); if (!raw) return;
+      let toks = raw.split(/[\s;\t]+/).filter(Boolean), meter = null;
+      if (/^(mittari|meter)$/i.test(toks[0])) return;  // CSV header
+      const mt = toks[0].toLowerCase();
+      if (/^(kylm|cold|k$)/.test(mt)) { meter = "kylma"; toks.shift(); }
+      else if (/^(l[äa]mmin|l[äa]mp|hot|l$)/.test(mt)) { meter = "lammin"; toks.shift(); }
+      let date = null, t = toks.shift() || "";
+      let m;
+      if ((m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) date = [m[1], m[2], m[3]];
+      else if ((m = t.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})?$/))) date = [m[3] ? (m[3].length === 2 ? "20" + m[3] : m[3]) : String(yearNow), m[2], m[1]];
+      const iso = date ? date[0] + "-" + date[1].padStart(2, "0") + "-" + date[2].padStart(2, "0") : null;
+      const valid = iso && !isNaN(toUTC(iso)) && fromUTC(toUTC(iso)) === iso;
+      while (toks.length && /^[a-zåäö]+[a-zåäö, ]*$/i.test(toks[toks.length - 1])) toks.pop();  // e.g. "käsin" from CSV
+      const vals = toks.map(num);
+      if (!valid || !vals.length || vals.some(v => v == null) || vals.length > (meter ? 1 : 2)) { bad.push(i + 1); return; }
+      if (meter) ok.push({ meter, date: iso, value: vals[0] });
+      else { ok.push({ meter: "kylma", date: iso, value: vals[0] }); if (vals.length > 1) ok.push({ meter: "lammin", date: iso, value: vals[1] }); }
+    });
+    return { ok, bad };
+  }
+  $("imp").addEventListener("input", () => { $("imp-save").disabled = true; $("imp-msg").textContent = ""; });
+  $("imp-check").onclick = () => {
+    const { ok, bad } = parseLines($("imp").value); parsed = ok;
+    const msg = $("imp-msg"); msg.innerHTML = "";
+    if (!ok.length && !bad.length) { msg.textContent = "Kenttä on tyhjä."; return; }
+    const nc = ok.filter(r => r.meter === "kylma").length, nh = ok.length - nc;
+    const replaced = ok.filter(r => all.some(a => a.meter === r.meter && a.date === r.date)).length;
+    const p = document.createElement("div");
+    p.textContent = `Luettiin ${ok.length} lukemaa (kylmä ${nc}, lämmin ${nh}).` + (replaced ? ` ${replaced} niistä korvaa saman päivän aiemman lukeman.` : "");
+    msg.append(p);
+    if (bad.length) { const b = document.createElement("div"); b.className = "bad"; b.textContent = "Näitä rivejä ei ymmärretty: " + bad.join(", ") + ". Korjaa ne tai poista ennen tallennusta."; msg.append(b); }
+    $("imp-save").disabled = !ok.length;
+  };
+  $("imp-save").onclick = () => {
+    if (!parsed.length) return;
+    const key = (r) => r.meter + "|" + r.date, map = new Map(all.map(r => [key(r), r]));
+    for (const r of parsed) map.set(key(r), { ...r, source: "tuotu" });
+    try { localStorage.setItem("vesimittari-lukemat", JSON.stringify([...map.values()])); }
+    catch (e) { $("imp-msg").textContent = "Tallennus ei onnistunut tähän selaimeen."; return; }
+    location.reload();
+  };
+
+  // ---- Read handwritten paper with Gemini ----
+  function toJpeg(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => { URL.revokeObjectURL(url); const k = Math.min(1, 2400 / Math.max(im.width, im.height)), c = document.createElement("canvas");
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        res(c.toDataURL("image/jpeg", 0.9).split(",")[1]); };
+      im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Kuvaa ei voitu avata")); };
+      im.src = url;
+    });
+  }
+  $("paper").addEventListener("change", async (ev) => {
+    const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
+    const msg = $("imp-msg"); msg.className = "note";
+    let key = "", model = "gemini-3.8-flash";
+    try { key = JSON.parse(localStorage.getItem("vesimittari-gemini-key") || '""'); model = JSON.parse(localStorage.getItem("vesimittari-gemini-model") || '""') || model; } catch (e) {}
+    if (!key) { msg.textContent = "Paperin lukeminen vaatii Gemini-avaimen. Lisää se etusivun alaosasta (Kuvan tunnistus), tai kirjoita lukemat kenttään käsin."; return; }
+    msg.textContent = "Luetaan paperia… tämä voi kestää hetken.";
+    const year = new Date().getFullYear();
+    const prompt = `The photo shows a handwritten list of household water meter readings (Finnish). Each entry has a date and one or two readings in cubic metres: cold water (kylmä, K) and hot water (lämmin, L). Decimal separator may be a comma.\n` +
+      `Transcribe every entry. If the year is missing, use ${year}. If you cannot tell which reading is cold and which is hot, assume the first is cold and the second hot, unless the column headers say otherwise. Do not invent values; skip entries you cannot read and mention them in the note.\n` +
+      `Reply with only JSON: {"rows": [{"date": "YYYY-MM-DD", "cold": 205.31 or null, "hot": 67.12 or null}], "note": "short note in Finnish about anything uncertain, empty if none"}`;
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: await toJpeg(f) } }] }], generationConfig: { responseMimeType: "application/json", temperature: 0 } })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(r.status === 429 ? "Ilmaisen tason raja täyttyi, yritä myöhemmin." : (j.error && j.error.message) || "HTTP " + r.status);
+      const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+      const res = JSON.parse((text.match(/\{[\s\S]*\}/) || ["{}"])[0]);
+      const rows = (Array.isArray(res.rows) ? res.rows : []).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x.date));
+      if (!rows.length) { msg.textContent = res.note || "Paperista ei löytynyt lukemia. Ota tarkempi kuva."; return; }
+      const f3 = (v) => String(v).replace(".", ",");
+      $("imp").value = rows.sort((a, b) => a.date < b.date ? -1 : 1).map(x => {
+        const [y, m, d] = x.date.split("-").map(Number), dt = d + "." + m + "." + y;
+        const c = typeof x.cold === "number", h = typeof x.hot === "number";
+        return c && h ? `${dt} ${f3(x.cold)} ${f3(x.hot)}` : c ? `kylmä ${dt} ${f3(x.cold)}` : h ? `lämmin ${dt} ${f3(x.hot)}` : `${dt} ?`;
+      }).join("\n");
+      $("imp-save").disabled = true;
+      msg.textContent = (res.note ? res.note + " " : "") + "Vertaa rivejä paperiin, korjaa virheet ja paina Tarkista.";
+    } catch (e) { msg.textContent = "Paperin lukeminen epäonnistui: " + e.message; }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
