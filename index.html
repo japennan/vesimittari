@@ -7,7 +7,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<meta name="theme-color" content="#1f6fb2">
+<meta name="theme-color" content="#eef2f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10171b" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
 <style>
 :root {
@@ -108,14 +109,35 @@ ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
 .del.armed { color: #fff; background: var(--warm); }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
 @media (max-width: 380px) { .drum span { font-size: 30px; min-width: 20px; } }
+
+/* --- app chrome --- */
+html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+body { padding-top: 0 !important; padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 31; background: var(--bg); }
+.appbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 8px calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--bg); border-bottom: 1px solid transparent; transition: border-color .2s; }
+.appbar.scrolled { border-bottom-color: var(--line); }
+.appbar h1 { font-family: var(--f-digit); font-weight: 700; font-size: 26px; margin: 0; line-height: 1.1; }
+.appbar-in { max-width: 720px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: var(--muted); font: 600 11.5px var(--f-body); padding: 4px 0; user-select: none; }
+.tabbar a svg { width: 22px; height: 22px; padding: 4px 18px; border-radius: 999px; box-sizing: content-box; transition: background .15s; }
+.tabbar a[aria-current="page"] { color: var(--fg); }
+.tabbar a[aria-current="page"] svg { background: var(--cold-soft, #dcebf7); color: var(--cold, #1f6fb2); }
+.tabbar a:focus-visible { outline: 2px solid var(--cold, #1f6fb2); outline-offset: -2px; border-radius: 12px; }
+button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
+.btn:active, .seg button:active, .ranges button:active { transform: scale(.98); }
+.toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
+@media print { .appbar, .tabbar { display: none !important; } body { padding-bottom: 0 !important; } }
 </style>
 </head>
 <body>
+<header class="appbar"><div class="appbar-in"><h1>Vesimittari</h1><span class="sync" id="sync">Vain tällä laitteella</span></div></header>
 <div class="wrap">
-  <div class="top">
-    <h1>Vesimittarin lukemat</h1>
-    <span style="display:flex;gap:8px;align-items:center"><a class="hist" href="historia.html">Historia →</a><span class="sync" id="sync">Vain tällä laitteella</span></span>
-  </div>
 
   <div class="seg" role="group" aria-label="Mittari">
     <button type="button" id="m-kylma" aria-pressed="true"><span class="dot"></span>Kylmä vesi</button>
@@ -174,108 +196,13 @@ ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
   </section>
 
   <section class="card">
-    <div class="top"><h2>Viimeisimmät lukemat</h2><a class="hist" href="historia.html">Kaaviot ja raportit →</a></div>
+    <div class="top"><h2>Viimeisimmät lukemat</h2><a class="hist" href="historia.html">Kaaviot →</a></div>
     <div id="list"></div>
   </section>
 
-  <section class="card">
-    <div class="top"><h2>Kuvan tunnistus (Gemini)</h2><button class="btn ghost small" type="button" id="toggle-gem">Näytä asetukset</button></div>
-    <p class="hint" id="gem-state">Tunnistus vaatii ilmaisen Gemini API -avaimen. Ilman avainta lukema kirjoitetaan käsin.</p>
-    <div id="gem" hidden style="display:flex;flex-direction:column;gap:12px">
-      <ol class="steps">
-        <li>Mene osoitteeseen <b>aistudio.google.com/apikey</b> ja kirjaudu Google-tilillä.</li>
-        <li>Paina <b>Create API key</b> ja kopioi avain.</li>
-        <li>Liitä avain alle ja paina Tallenna avain.</li>
-      </ol>
-      <label class="f" for="gkey">Gemini API -avain<input type="password" id="gkey" autocomplete="off" placeholder="AIza…"></label>
-      <label class="f" for="gmodel">Malli<input type="url" id="gmodel" autocomplete="off"></label>
-      <div class="row">
-        <button class="btn" type="button" id="gsave">Tallenna avain</button>
-        <button class="btn ghost" type="button" id="gclear">Poista avain</button>
-      </div>
-      <p class="hint">Avain tallentuu vain tämän laitteen selaimeen. Ilmaisella tasolla Google voi käyttää lähetettyjä kuvia palveluidensa kehittämiseen.</p>
-    </div>
-  </section>
-
-  <section class="card">
-    <div class="top"><h2>Google Sheets -tallennus</h2><button class="btn ghost small" type="button" id="toggle-setup">Näytä ohjeet</button></div>
-    <p class="hint" id="sheet-state">Lukemat tallentuvat nyt vain tämän selaimen muistiin. Kytke Google-taulukko, niin ne tallentuvat myös sinne.</p>
-    <div id="setup" hidden style="display:flex;flex-direction:column;gap:12px">
-      <ol class="steps">
-        <li>Luo uusi Google Sheets -taulukko (sheets.new).</li>
-        <li>Valitse taulukossa <b>Laajennukset → Apps Script</b>.</li>
-        <li>Poista editorissa valmiina oleva koodi ja liitä tilalle alla oleva koodi. Tallenna.</li>
-        <li>Paina <b>Ota käyttöön → Uusi käyttöönotto</b>. Valitse tyypiksi <b>Verkkosovellus</b>. Suorita käyttäjänä: <b>Minä</b>. Käyttöoikeus: <b>Kuka tahansa</b>.</li>
-        <li>Hyväksy Googlen lupakysely. Kopioi saamasi verkkosovelluksen URL (päättyy /exec) alla olevaan kenttään.</li>
-      </ol>
-      <textarea id="gs" readonly></textarea>
-      <button class="btn ghost small" type="button" id="copy">Kopioi koodi</button>
-      <label class="f" for="url">Verkkosovelluksen URL<input type="url" id="url" placeholder="https://script.google.com/macros/s/…/exec"></label>
-      <div class="row">
-        <button class="btn" type="button" id="connect">Kytke ja hae lukemat</button>
-        <button class="btn ghost" type="button" id="disconnect">Irrota</button>
-      </div>
-      <p class="hint">Pidä URL omana tietonasi: sen tietävä voi lukea ja lisätä lukemia taulukkoon.</p>
-    </div>
-  </section>
 </div>
 <div class="toast" id="toast" hidden></div>
 
-<script id="gs-code" type="text/plain">// Vesimittarin lukemat -> Google Sheets
-const SHEET = 'Lukemat';
-
-function sheet_() {
-  const ss = SpreadsheetApp.getActive();
-  let s = ss.getSheetByName(SHEET);
-  if (!s) {
-    s = ss.insertSheet(SHEET);
-    s.appendRow(['Mittari', 'Päivä', 'Lukema m3', 'Lähde', 'Tallennettu']);
-    s.getRange('B:B').setNumberFormat('@');
-  }
-  return s;
-}
-
-function rows_() {
-  const v = sheet_().getDataRange().getValues().slice(1);
-  return v.map(r => ({
-    meter: String(r[0]),
-    date: r[1] instanceof Date ? Utilities.formatDate(r[1], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(r[1]),
-    value: Number(String(r[2]).replace(',', '.')),
-    source: String(r[3])
-  }));
-}
-
-function out_(o) {
-  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
-}
-
-function doGet() {
-  return out_({ ok: true, rows: rows_() });
-}
-
-function doPost(e) {
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    const b = JSON.parse(e.postData.contents);
-    const s = sheet_();
-    const all = rows_();
-    const i = all.findIndex(r => r.meter === b.meter && r.date === b.date);
-    if (b.action === 'delete') {
-      if (i >= 0) s.deleteRow(i + 2);
-    } else {
-      const row = [b.meter, b.date, Number(b.value), b.source || '', new Date()];
-      if (i >= 0) s.getRange(i + 2, 1, 1, 5).setValues([row]);
-      else s.appendRow(row);
-    }
-    return out_({ ok: true });
-  } catch (err) {
-    return out_({ ok: false, error: String(err) });
-  } finally {
-    lock.releaseLock();
-  }
-}
-</script>
 
 <script>
 (() => {
@@ -298,8 +225,6 @@ function doPost(e) {
   function toast(m) { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
 
   $("date").value = localISO();
-  $("gs").value = $("gs-code").textContent.trim();
-  $("url").value = sheetUrl;
 
   const readings = () => all.filter(r => r.meter === meter).sort((a, b) => a.date < b.date ? -1 : 1);
   function intervals(rs) {
@@ -331,7 +256,6 @@ function doPost(e) {
     renderChart(iv.slice(-14)); renderList(rs, iv); checkWarn();
     $("sync").textContent = sheetUrl ? "Google Sheets kytketty" : "Vain tällä laitteella";
     $("sync").classList.toggle("on", !!sheetUrl);
-    $("sheet-state").textContent = sheetUrl ? "Lukemat tallentuvat Google-taulukkoon ja tämän selaimen muistiin." : "Lukemat tallentuvat nyt vain tämän selaimen muistiin. Kytke Google-taulukko, niin ne tallentuvat myös sinne.";
   }
 
   function renderChart(iv) {
@@ -400,12 +324,6 @@ function doPost(e) {
   // ---- Photo + Gemini ----
   const GKEY = "vesimittari-gemini-key", GMODEL = "vesimittari-gemini-model", DEFAULT_MODEL = "gemini-3.8-flash";
   let gkey = store.get(GKEY, ""), gmodel = store.get(GMODEL, DEFAULT_MODEL) || DEFAULT_MODEL;
-  $("gmodel").value = gmodel; $("gkey").value = gkey;
-  function gemState() { $("gem-state").textContent = gkey ? "Tunnistus käytössä (" + gmodel + "). Avain on tallennettu tälle laitteelle." : "Tunnistus vaatii ilmaisen Gemini API -avaimen. Ilman avainta lukema kirjoitetaan käsin."; }
-  gemState();
-  $("toggle-gem").onclick = () => { const s = $("gem"); s.hidden = !s.hidden; $("toggle-gem").textContent = s.hidden ? "Näytä asetukset" : "Piilota asetukset"; };
-  $("gsave").onclick = () => { gkey = $("gkey").value.trim(); gmodel = $("gmodel").value.trim() || DEFAULT_MODEL; store.set(GKEY, gkey); store.set(GMODEL, gmodel); gemState(); toast(gkey ? "Avain tallennettu" : "Avain puuttuu"); };
-  $("gclear").onclick = () => { gkey = ""; $("gkey").value = ""; store.set(GKEY, ""); gemState(); toast("Avain poistettu"); };
 
   function toJpeg(file) {
     return new Promise((res, rej) => {
@@ -453,7 +371,7 @@ function doPost(e) {
   const show = (v) => fmt(v, 3).replace(/\s/g, "");
   async function recognize(file) {
     const st = $("status"); st.className = "status";
-    if (!gkey) { st.textContent = "Kuvan tunnistus ei ole käytössä. Kirjoita lukema käsin tai lisää Gemini-avain asetuksista."; return; }
+    if (!gkey) { st.textContent = "Kuvan tunnistus ei ole käytössä. Kirjoita lukema käsin tai lisää Gemini-avain Asetukset-välilehdellä."; return; }
     st.textContent = "Luetaan lukemaa kuvasta…";
     try {
       const res = await gemini(await toJpeg(file));
@@ -540,8 +458,6 @@ function doPost(e) {
   };
 
   // ---- Sheets setup ----
-  $("toggle-setup").onclick = () => { const s = $("setup"); s.hidden = !s.hidden; $("toggle-setup").textContent = s.hidden ? "Näytä ohjeet" : "Piilota ohjeet"; };
-  $("copy").onclick = async () => { try { await navigator.clipboard.writeText($("gs").value); toast("Koodi kopioitu"); } catch (e) { $("gs").select(); toast("Valitse ja kopioi koodi"); } };
   async function pull() {
     const r = await fetch(sheetUrl); const j = await r.json(); if (!j.ok) throw new Error("virhe");
     const rev = { "Kylmä": "kylma", "Lämmin": "lammin" };
@@ -552,23 +468,11 @@ function doPost(e) {
     all = [...map.values()]; store.set(KEY, all); render();
     return localOnly;
   }
-  $("connect").onclick = async () => {
-    const u = $("url").value.trim();
-    if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)) { toast("URL:n pitää alkaa script.google.com ja päättyä /exec"); return; }
-    sheetUrl = u; const btn = $("connect"); btn.disabled = true;
-    try {
-      const localOnly = await pull();
-      for (const r of localOnly) await post({ action: "save", meter: METERS[r.meter], date: r.date, value: r.value, source: r.source });
-      store.set(URLKEY, sheetUrl); render();
-      toast("Kytketty" + (localOnly.length ? ", " + localOnly.length + " lukemaa lähetetty taulukkoon" : ""));
-    } catch (e) { sheetUrl = store.get(URLKEY, ""); toast("Yhteys ei toiminut. Tarkista URL ja että käyttöoikeus on Kuka tahansa."); }
-    finally { btn.disabled = false; }
-  };
-  $("disconnect").onclick = () => { sheetUrl = ""; store.set(URLKEY, ""); $("url").value = ""; render(); toast("Taulukko irrotettu. Lukemat jäävät tälle laitteelle."); };
-
   render();
   if (sheetUrl) pull().catch(() => {});
 })();
 </script>
+<nav class="tabbar" aria-label="Päävalikko"><a href="./" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Lukema</span></a><a href="historia.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Historia</span></a><a href="raportti.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg><span>Raportti</span></a><a href="asetukset.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Asetukset</span></a></nav>
+<script>(()=>{const b=document.querySelector(".appbar");if(!b)return;const f=()=>b.classList.toggle("scrolled",scrollY>4);addEventListener("scroll",f,{passive:true});f();})();</script>
 </body>
 </html>

@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vesimittarin asetukset</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#eef2f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10171b" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #eef2f4; --surface: #ffffff; --fg: #16232b; --muted: #5d6f79; --line: #d3dde2; --grid: #e6ecef;
+  --cold: #1f6fb2; --hot: #c8402c; --cold-soft: #dcebf7;
+  --f-digit: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #10171b; --surface: #182228; --fg: #e5ecef; --muted: #93a5ae; --line: #2a3840; --grid: #223038;
+          --cold: #4596d6; --hot: #e4644d; --cold-soft: #17324a; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 40px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-family: var(--f-digit); font-weight: 700; font-size: 28px; margin: 0; }
+h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0; }
+a { color: var(--cold); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.back { font-weight: 600; text-decoration: none; font-size: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ranges { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
+.ranges button { font: 600 14px var(--f-body); border: 0; border-radius: 9px; padding: 9px 4px; background: transparent; color: var(--muted); cursor: pointer; }
+.ranges button[aria-pressed="true"] { background: var(--cold-soft); color: var(--fg); }
+button:focus-visible { outline: 2px solid var(--cold); outline-offset: 2px; }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 520px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+.tile b { display: block; font-family: var(--f-digit); font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile small { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.sw.c { background: var(--cold); } .sw.h { background: var(--hot); }
+.legend { display: flex; gap: 16px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.chartwrap { position: relative; }
+.chartwrap svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.chartwrap text { fill: var(--muted); font: 11px var(--f-body); font-variant-numeric: tabular-nums; }
+.gridl { stroke: var(--grid); stroke-width: 1; }
+.base { stroke: var(--line); stroke-width: 1; }
+.bc { fill: var(--cold); } .bh { fill: var(--hot); }
+.hl { fill: var(--fg); opacity: .06; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; z-index: 2; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip div { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.pform { display: grid; grid-template-columns: 1.2fr 1.2fr 1fr; gap: 8px; }
+@media (max-width: 440px) { .pform { grid-template-columns: 1fr 1fr; } .pform .pf:first-child { grid-column: 1 / -1; } }
+.pf { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); min-width: 0; }
+.pf select, .pf input { font: 500 16px var(--f-body); padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); width: 100%; min-width: 0; }
+.prow { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; font-variant-numeric: tabular-nums; }
+.prow:first-child { border-top: 0; }
+.prow .pr { font-weight: 700; }
+.del { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; font: 600 12px var(--f-body); }
+.del.armed { color: #fff; background: var(--hot); }
+.avg { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.avgl { stroke: var(--fg); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .55; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; }
+td.tot { font-weight: 700; }
+.btn { font: 600 15px var(--f-body); border-radius: 10px; padding: 12px 16px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+.empty { text-align: center; padding: 24px 8px; }
+textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+.row2 { display: flex; gap: 8px; flex-wrap: wrap; } .row2 .btn { flex: 1 1 140px; }
+.btn.primary { background: var(--cold); color: #fff; border-color: var(--cold); }
+.btn:disabled { opacity: .5; }
+.bad { color: var(--hot); }
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+details { display: flex; flex-direction: column; gap: 10px; }
+details summary { cursor: pointer; font-weight: 600; color: var(--cold); padding: 4px 0; }
+details[open] > * + * { margin-top: 10px; }
+#gs { font-size: 12px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; z-index: 50; max-width: calc(100% - 32px); text-align: center; }
+.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.chk input { width: 18px; height: 18px; margin-top: 2px; flex: none; }
+.btn.danger { background: var(--hot); color: #fff; border-color: var(--hot); }
+.gal { align-self: center; font-size: 14px; font-weight: 600; color: var(--cold); text-decoration: underline; cursor: pointer; }
+.vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.pick { position: relative; overflow: hidden; text-align: center; }
+.pick > input[type=file] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+.pick:focus-within { outline: 2px solid var(--cold); outline-offset: 2px; }
+
+/* --- app chrome --- */
+html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+body { padding-top: 0 !important; padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 31; background: var(--bg); }
+.appbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 8px calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--bg); border-bottom: 1px solid transparent; transition: border-color .2s; }
+.appbar.scrolled { border-bottom-color: var(--line); }
+.appbar h1 { font-family: var(--f-digit); font-weight: 700; font-size: 26px; margin: 0; line-height: 1.1; }
+.appbar-in { max-width: 720px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: var(--muted); font: 600 11.5px var(--f-body); padding: 4px 0; user-select: none; }
+.tabbar a svg { width: 22px; height: 22px; padding: 4px 18px; border-radius: 999px; box-sizing: content-box; transition: background .15s; }
+.tabbar a[aria-current="page"] { color: var(--fg); }
+.tabbar a[aria-current="page"] svg { background: var(--cold-soft, #dcebf7); color: var(--cold, #1f6fb2); }
+.tabbar a:focus-visible { outline: 2px solid var(--cold, #1f6fb2); outline-offset: -2px; border-radius: 12px; }
+button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
+.btn:active, .seg button:active, .ranges button:active { transform: scale(.98); }
+.toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
+@media print { .appbar, .tabbar { display: none !important; } body { padding-bottom: 0 !important; } }
+</style>
+</head>
+<body>
+<header class="appbar"><div class="appbar-in"><h1>Asetukset</h1></div></header>
+<div class="wrap">
+
+  <div id="content" style="display:flex;flex-direction:column;gap:16px">
+    <section class="card" id="gem-card">
+      <h2>Kuvan tunnistus (Gemini)</h2>
+      <p class="note" id="gem-state"></p>
+      <ol class="steps">
+        <li>Avaa <b>aistudio.google.com/apikey</b> ja kirjaudu Google-tilillä.</li>
+        <li>Paina <b>Create API key</b> ja kopioi avain.</li>
+        <li>Liitä avain alle ja paina Tallenna.</li>
+      </ol>
+      <label class="pf" for="gkey">Gemini API -avain<input type="password" id="gkey" autocomplete="off" placeholder="AIza…"></label>
+      <label class="pf" for="gmodel">Malli<input type="text" id="gmodel" autocomplete="off" autocapitalize="off"></label>
+      <div class="row2">
+        <button class="btn primary" type="button" id="gsave">Tallenna</button>
+        <button class="btn" type="button" id="gclear">Poista avain</button>
+      </div>
+      <p class="note">Avain tallentuu vain tähän puhelimeen. Ilmaisella tasolla Google voi käyttää lähetettyjä kuvia palveluidensa kehittämiseen.</p>
+    </section>
+
+    <section class="card" id="sheet-card">
+      <h2>Google Sheets -tallennus</h2>
+      <p class="note" id="sheet-state"></p>
+      <details>
+        <summary>Käyttöönotto-ohjeet</summary>
+        <ol class="steps">
+          <li>Luo uusi Google Sheets -taulukko (sheets.new).</li>
+          <li>Valitse <b>Laajennukset → Apps Script</b>.</li>
+          <li>Poista valmis koodi, liitä tilalle alla oleva koodi ja tallenna.</li>
+          <li><b>Ota käyttöön → Uusi käyttöönotto</b> → tyyppi <b>Verkkosovellus</b>, suorita käyttäjänä <b>Minä</b>, käyttöoikeus <b>Kuka tahansa</b>.</li>
+          <li>Hyväksy lupakysely ja kopioi verkkosovelluksen URL (päättyy /exec) alle.</li>
+        </ol>
+        <textarea id="gs" readonly rows="6"></textarea>
+        <button class="btn" type="button" id="copy">Kopioi koodi</button>
+      </details>
+      <label class="pf" for="url">Verkkosovelluksen URL<input type="url" id="url" placeholder="https://script.google.com/macros/s/…/exec"></label>
+      <div class="row2">
+        <button class="btn primary" type="button" id="connect">Kytke</button>
+        <button class="btn" type="button" id="disconnect">Irrota</button>
+      </div>
+      <p class="note">Pidä URL omana tietonasi: sen tietävä voi lukea ja lisätä lukemia taulukkoon.</p>
+    </section>
+
+    <section class="card" id="price-card">
+      <h2>Vesimaksut</h2>
+      <p class="note">Syötä hinta euroina kuutiolta ja päivä, josta lähtien se on voimassa. Kun hinta muuttuu, lisää uusi rivi uudella alkupäivällä. Vanhat hinnat jäävät voimaan aiemmille päiville.</p>
+      <div id="price-list"></div>
+      <div class="pform">
+        <label class="pf" for="p-meter">Mittari
+          <select id="p-meter"><option value="kylma">Kylmä vesi</option><option value="lammin">Lämmin vesi</option></select>
+        </label>
+        <label class="pf" for="p-from">Alkaen<input type="date" id="p-from"></label>
+        <label class="pf" for="p-price">€ / m³<input type="text" id="p-price" inputmode="decimal" placeholder="esim. 5,90" autocomplete="off"></label>
+      </div>
+      <button class="btn primary" type="button" id="p-add">Lisää hinta</button>
+    </section>
+
+    <section class="card" id="import-card">
+      <h2>Tuo vanhat lukemat</h2>
+      <p class="note">Liitä tai kirjoita yksi päivä riville: päivämäärä, kylmän lukema ja lämpimän lukema. Erota luvut välilyönnillä. Jos tiedossa on vain yksi mittari, kirjoita rivin alkuun <b>kylmä</b> tai <b>lämmin</b>.</p>
+      <div class="btn pick" id="paper-btn">Kuvaa käsin kirjoitettu paperi<input type="file" id="paper" accept="image/*" capture="environment" aria-label="Kuvaa käsin kirjoitettu paperi"></div>
+      <label class="gal" for="paper2">tai valitse kuva galleriasta</label>
+      <input type="file" id="paper2" accept="image/*" class="vh">
+      <textarea id="imp" rows="7" placeholder="1.10.2026 205,310 67,120&#10;2.10.2026 205,560 67,230&#10;lämmin 3.10.2026 67,340"></textarea>
+      <div class="note" id="imp-msg"></div>
+      <div class="row2">
+        <button class="btn" type="button" id="imp-check">Tarkista</button>
+        <button class="btn primary" type="button" id="imp-save" disabled>Tallenna lukemat</button>
+      </div>
+    </section>
+
+    <section class="card" id="backup-card">
+      <h2>Varmuuskopio</h2>
+      <p class="note">Varmuuskopio sisältää kaikki lukemat, hinnat ja asetukset yhtenä JSON-tiedostona. Säilytä se esimerkiksi Google Drivessa. Sen avulla tiedot saa palautettua tai siirrettyä uuteen puhelimeen.</p>
+      <label class="chk" for="bk-secrets"><input type="checkbox" id="bk-secrets"> Ota mukaan Gemini-avain ja Google-taulukon osoite (puhelimen vaihtoa varten)</label>
+      <div class="row2">
+        <button class="btn primary" type="button" id="bk-export">Lataa varmuuskopio</button>
+        <div class="btn pick">Palauta varmuuskopiosta<input type="file" id="bk-file" aria-label="Palauta varmuuskopiosta"></div>
+      </div>
+      <div id="bk-preview" hidden style="display:flex;flex-direction:column;gap:10px">
+        <div class="note" id="bk-info"></div>
+        <div class="row2">
+          <button class="btn primary" type="button" id="bk-merge">Yhdistä nykyisiin</button>
+          <button class="btn" type="button" id="bk-replace">Korvaa kaikki tiedot</button>
+        </div>
+        <button class="btn" type="button" id="bk-cancel">Peruuta</button>
+      </div>
+      <button class="btn" type="button" id="csv">Lataa lukemat CSV-tiedostona (Excel)</button>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<script id="gs-code" type="text/plain">// Vesimittarin lukemat -> Google Sheets
+const SHEET = 'Lukemat';
+
+function sheet_() {
+  const ss = SpreadsheetApp.getActive();
+  let s = ss.getSheetByName(SHEET);
+  if (!s) {
+    s = ss.insertSheet(SHEET);
+    s.appendRow(['Mittari', 'Päivä', 'Lukema m3', 'Lähde', 'Tallennettu']);
+    s.getRange('B:B').setNumberFormat('@');
+  }
+  return s;
+}
+
+function rows_() {
+  const v = sheet_().getDataRange().getValues().slice(1);
+  return v.map(r => ({
+    meter: String(r[0]),
+    date: r[1] instanceof Date ? Utilities.formatDate(r[1], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(r[1]),
+    value: Number(String(r[2]).replace(',', '.')),
+    source: String(r[3])
+  }));
+}
+
+function out_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet() {
+  return out_({ ok: true, rows: rows_() });
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const b = JSON.parse(e.postData.contents);
+    const s = sheet_();
+    const all = rows_();
+    const i = all.findIndex(r => r.meter === b.meter && r.date === b.date);
+    if (b.action === 'delete') {
+      if (i >= 0) s.deleteRow(i + 2);
+    } else {
+      const row = [b.meter, b.date, Number(b.value), b.source || '', new Date()];
+      if (i >= 0) s.getRange(i + 2, 1, 1, 5).setValues([row]);
+      else s.appendRow(row);
+    }
+    return out_({ ok: true });
+  } catch (err) {
+    return out_({ ok: false, error: String(err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+</script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let all = [];
+  try { all = JSON.parse(localStorage.getItem("vesimittari-lukemat") || "[]") || []; } catch (e) { all = []; }
+  all = all.filter(r => r && (r.meter === "kylma" || r.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && isFinite(r.value));
+
+  const fmt = (n, d) => n.toLocaleString("fi-FI", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const toUTC = (s) => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+  const fromUTC = (t) => new Date(t).toISOString().slice(0, 10);
+  const DAY = 86400000;
+  const fiDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return d + "." + m + "." + y; };
+  const short = (iso) => { const [, m, d] = iso.split("-").map(Number); return d + "." + m + "."; };
+  const MONTHS = ["tammi", "helmi", "maalis", "huhti", "touko", "kesä", "heinä", "elo", "syys", "loka", "marras", "joulu"];
+
+  // Spread each interval's consumption evenly over its days: map date -> liters
+  function daily(meter) {
+    const rs = all.filter(r => r.meter === meter).sort((a, b) => a.date < b.date ? -1 : 1), out = new Map();
+    for (let i = 1; i < rs.length; i++) {
+      const a = toUTC(rs[i - 1].date), b = toUTC(rs[i].date), n = Math.round((b - a) / DAY);
+      if (n <= 0) continue;
+      const per = (rs[i].value - rs[i - 1].value) * 1000 / n;
+      for (let k = 1; k <= n; k++) out.set(fromUTC(a + k * DAY), per);
+    }
+    return out;
+  }
+  const dc = daily("kylma"), dh = daily("lammin");
+  const days = [...new Set([...dc.keys(), ...dh.keys()])].sort();
+
+
+  // ---- Prices ----
+  const PKEY = "vesimittari-hinnat";
+  let prices = [];
+  try { prices = JSON.parse(localStorage.getItem(PKEY) || "[]") || []; } catch (e) { prices = []; }
+  prices = prices.filter(p => p && (p.meter === "kylma" || p.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(p.from) && isFinite(p.price));
+  const savePrices = () => { try { localStorage.setItem(PKEY, JSON.stringify(prices)); } catch (e) {} };
+  function priceAt(meter, day) {
+    let best = null;
+    for (const p of prices) if (p.meter === meter && p.from <= day && (!best || p.from > best.from)) best = p;
+    return best ? best.price : null;
+  }
+  const hasPrices = () => prices.length > 0;
+  const costOf = (meter, map, d) => { const p = priceAt(meter, d), l = map.get(d); return p == null || l == null ? null : l / 1000 * p; };
+  const eur = (n) => n.toLocaleString("fi-FI", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+  if (!days.length && $("empty")) { $("empty").hidden = false; for (const el of $("content").children) if (!["import-card", "price-card", "backup-card"].includes(el.id)) el.hidden = true; }
+
+  let range = 30;
+  for (const b of document.querySelectorAll(".ranges button")) b.onclick = () => {
+    range = Number(b.dataset.r);
+    for (const x of document.querySelectorAll(".ranges button")) x.setAttribute("aria-pressed", String(x === b));
+    render();
+  };
+
+  function buckets(list, mode) {
+    const map = new Map();
+    for (const d of list) {
+      let key, label;
+      if (mode === "day") { key = d; }
+      else if (mode === "week") { const t = toUTC(d), wd = (new Date(t).getUTCDay() + 6) % 7; key = fromUTC(t - wd * DAY); }
+      else { key = d.slice(0, 7) + "-01"; }
+      if (!map.has(key)) map.set(key, { key, start: d, end: d, c: 0, h: 0, nc: 0, nh: 0, n: 0 });
+      const b = map.get(key); b.end = d; b.n++;
+      if (dc.has(d)) { b.c += dc.get(d); b.nc++; }
+      if (dh.has(d)) { b.h += dh.get(d); b.nh++; }
+    }
+    return [...map.values()].map(b => ({ ...b, pc: b.nc ? b.c / b.nc : 0, ph: b.nh ? b.h / b.nh : 0 }));
+  }
+
+  function render() {
+    if (!days.length || !$("t-cold")) return;
+    const last = days[days.length - 1];
+    const from = range ? fromUTC(toUTC(last) - (range - 1) * DAY) : days[0];
+    const list = days.filter(d => d >= from);
+    const span = list.length;
+    const mode = span <= 92 ? "day" : span <= 400 ? "week" : "month";
+
+    // tiles
+    const sum = (m) => list.reduce((s, d) => s + (m.get(d) || 0), 0), cnt = (m) => list.filter(d => m.has(d)).length;
+    const sc = sum(dc), sh = sum(dh), nc = cnt(dc), nh = cnt(dh);
+    $("t-cold").textContent = nc ? fmt(Math.round(sc / nc), 0) : "–";
+    $("t-hot").textContent = nh ? fmt(Math.round(sh / nh), 0) : "–";
+    $("t-tot").textContent = fmt((sc + sh) / 1000, 2);
+    $("t-share").textContent = sc + sh > 0 && nh ? fmt(Math.round(sh / (sc + sh) * 100), 0) + " %" : "–";
+    let missingNote = "";
+    $("cost-tiles").hidden = !hasPrices();
+    if (hasPrices()) {
+      let ec = 0, eh = 0, mc = false, mh = false;
+      for (const d of list) { const a = costOf("kylma", dc, d), b = costOf("lammin", dh, d); if (a != null) { ec += a; } else if (dc.has(d)) mc = true; if (b != null) { eh += b; } else if (dh.has(d)) mh = true; }
+      $("e-cold").textContent = eur(ec) + (mc ? "*" : ""); $("e-hot").textContent = eur(eh) + (mh ? "*" : "");
+      $("e-tot").textContent = eur(ec + eh) + (mc || mh ? "*" : "");
+      $("e-day").textContent = eur((ec + eh) / Math.max(1, list.length));
+      missingNote = mc || mh ? " * Osalle päivistä ei ole hintaa, joten ne puuttuvat euroista." : "";
+    }
+
+    const unitT = mode === "day" ? "litraa vuorokaudessa" : mode === "week" ? "viikoittain, keskim. l/vrk" : "kuukausittain, keskim. l/vrk";
+    for (const el of document.querySelectorAll(".unit-t")) el.textContent = unitT;
+    $("chart-note").textContent = "Jakso " + fiDate(list[0]) + "–" + fiDate(last) + ". Jos lukemien välissä on useampi päivä, kulutus jaetaan niille tasan." + missingNote;
+    const bs = buckets(list, mode);
+    chart($("chart-c"), bs, mode, "pc", "nc", "bc", "Kylmä", nc ? sc / nc : null, $("avg-c"));
+    chart($("chart-h"), bs, mode, "ph", "nh", "bh", "Lämmin", nh ? sh / nh : null, $("avg-h"));
+    table();
+  }
+
+  function niceStep(max) { const raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+
+  function chart(wrap, bs, mode, k, nk, cls, name, avg, avgEl) {
+    const tip = wrap.querySelector(".tip");
+    wrap.querySelector("svg")?.remove(); tip.hidden = true;
+    avgEl.textContent = avg == null ? "" : "keskim. " + fmt(Math.round(avg), 0) + " l/vrk";
+    const W = Math.round(Math.min(680, Math.max(300, wrap.clientWidth || 680))), H = W < 500 ? 180 : 200, L = 40, R = 16, T = 10, B = 26;
+    const max = Math.max(1, ...bs.map(b => b[k]));
+    const step = niceStep(max), top = Math.ceil(max / step) * step;
+    const y = (v) => T + (H - T - B) * (1 - Math.max(0, v) / top);
+    const slot = (W - L - R) / bs.length, bw = Math.max(2, Math.min(28, slot * .7));
+    let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${name} vesi, kulutus">`;
+    for (let g = 0; g <= top + 1e-9; g += step) s += `<line class="gridl" x1="${L}" x2="${W - R}" y1="${y(g).toFixed(1)}" y2="${y(g).toFixed(1)}"/><text x="${L - 6}" y="${(y(g) + 4).toFixed(1)}" text-anchor="end">${fmt(g, step < 1 ? 1 : 0)}</text>`;
+    s += `<rect class="hl" x="0" y="${T}" width="${slot.toFixed(1)}" height="${H - T - B}" visibility="hidden"/>`;
+    const r = Math.min(4, bw / 2), every = Math.max(1, Math.ceil(bs.length / (W < 500 ? 6 : 9)));
+    bs.forEach((b, i) => {
+      const cx = L + i * slot + slot / 2, x = cx - bw / 2, v = b[k];
+      if (b[nk] && v > 0) { const yt = y(v), h = Math.max(1, y(0) - yt); s += roundTop(cls, x, y(0) - h, bw, h, r); }
+      if (i % every === (bs.length - 1) % every) {
+        const lab = mode === "month" ? MONTHS[Number(b.key.slice(5, 7)) - 1] + " " + b.key.slice(2, 4) : short(b.key);
+        s += `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle">${lab}</text>`;
+      }
+    });
+    if (avg != null && avg > 0) s += `<line class="avgl" x1="${L}" x2="${W - R}" y1="${y(avg).toFixed(1)}" y2="${y(avg).toFixed(1)}"/>`;
+    s += `<line class="base" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/></svg>`;
+    wrap.insertAdjacentHTML("beforeend", s);
+    const svg = wrap.querySelector("svg"), hl = svg.querySelector(".hl");
+    const unit = mode === "day" ? " l" : " l/vrk";
+    function show(ev) {
+      const rect = svg.getBoundingClientRect(), px = (ev.clientX - rect.left) * W / rect.width, i = Math.floor((px - L) / slot);
+      if (i < 0 || i >= bs.length) return hide();
+      const b = bs[i];
+      hl.setAttribute("x", (L + i * slot).toFixed(1)); hl.setAttribute("visibility", "visible");
+      const head = mode === "day" ? fiDate(b.key) + " (" + new Date(toUTC(b.key)).toLocaleDateString("fi-FI", { weekday: "short", timeZone: "UTC" }) + ")" : mode === "week" ? short(b.start) + "–" + fiDate(b.end) : MONTHS[Number(b.key.slice(5, 7)) - 1] + "kuu " + b.key.slice(0, 4);
+      tip.innerHTML = ""; const hd = document.createElement("b"); hd.textContent = head; tip.append(hd);
+      const d = document.createElement("div"); d.textContent = b[nk] ? name + " " + fmt(Math.round(b[k]), 0) + unit : "Ei lukemaa"; tip.append(d);
+      if (b[nk] && hasPrices()) { const mt = k === "pc" ? "kylma" : "lammin", mp = k === "pc" ? dc : dh; let e = 0, ok = false; for (let t = toUTC(b.start); t <= toUTC(b.end); t += DAY) { const c = costOf(mt, mp, fromUTC(t)); if (c != null) { e += c; ok = true; } } if (ok) { const n = Math.round((toUTC(b.end) - toUTC(b.start)) / DAY) + 1, x = document.createElement("div"); x.textContent = "≈ " + eur(mode === "day" ? e : e / n) + (mode === "day" ? "" : " / vrk"); tip.append(x); } }
+      if (avg && b[nk]) { const e = document.createElement("div"); const diff = Math.round((b[k] / avg - 1) * 100); e.textContent = (diff >= 0 ? "+" : "") + diff + " % keskiarvoon"; tip.append(e); }
+      tip.hidden = false;
+      const cx = (L + i * slot + slot / 2) * rect.width / W, tw = tip.offsetWidth, ww = wrap.clientWidth;
+      tip.style.left = Math.max(0, Math.min(ww - tw, cx - tw / 2)) + "px"; tip.style.top = "0px";
+    }
+    function hide() { tip.hidden = true; hl.setAttribute("visibility", "hidden"); }
+    svg.addEventListener("pointermove", show); svg.addEventListener("pointerdown", show); svg.addEventListener("pointerleave", hide);
+  }
+  function roundTop(cls, x, y, w, h, r) {
+    r = Math.min(r, h);
+    return `<path class="${cls}" d="M${x.toFixed(1)},${(y + h).toFixed(1)} V${(y + r).toFixed(1)} Q${x.toFixed(1)},${y.toFixed(1)} ${(x + r).toFixed(1)},${y.toFixed(1)} H${(x + w - r).toFixed(1)} Q${(x + w).toFixed(1)},${y.toFixed(1)} ${(x + w).toFixed(1)},${(y + r).toFixed(1)} V${(y + h).toFixed(1)} Z"/>`;
+  }
+
+  function table() {
+    const m = new Map();
+    for (const d of days) {
+      const k = d.slice(0, 7);
+      if (!m.has(k)) m.set(k, { c: 0, h: 0 });
+      const o = m.get(k); o.c += dc.get(d) || 0; o.h += dh.get(d) || 0;
+      const a = costOf("kylma", dc, d), b2 = costOf("lammin", dh, d); o.e = (o.e || 0) + (a || 0) + (b2 || 0);
+    }
+    const rows = [...m.entries()].sort((a, b) => a[0] < b[0] ? 1 : -1).slice(0, 24);
+    const t = $("months"); t.innerHTML = "<thead><tr><th>Kuukausi</th><th>Kylmä m³</th><th>Lämmin m³</th><th>Yhteensä m³</th>" + (hasPrices() ? "<th>Hinta</th>" : "") + "</tr></thead>";
+    const tb = document.createElement("tbody");
+    for (const [k, o] of rows) {
+      const tr = document.createElement("tr"), [y, mo] = k.split("-").map(Number);
+      for (const [txt, cls] of [[MONTHS[mo - 1] + "kuu " + y, ""], [fmt(o.c / 1000, 3), ""], [fmt(o.h / 1000, 3), ""], [fmt((o.c + o.h) / 1000, 3), "tot"], ...(hasPrices() ? [[eur(o.e || 0), "tot"]] : [])]) {
+        const td = document.createElement("td"); if (cls) td.className = cls;
+        if (txt === MONTHS[mo - 1] + "kuu " + y) { const a = document.createElement("a"); a.href = "raportti.html?kk=" + k; a.textContent = txt; td.append(a); } else td.textContent = txt;
+        tr.append(td);
+      }
+      tb.append(tr);
+    }
+    t.append(tb);
+  }
+
+  if ($("csv")) $("csv").onclick = () => {
+    const names = { kylma: "Kylmä", lammin: "Lämmin" };
+    const rows = [...all].sort((a, b) => a.meter === b.meter ? (a.date < b.date ? -1 : 1) : (a.meter < b.meter ? -1 : 1));
+    const csv = "﻿Mittari;Päivä;Lukema m3;Lähde\n" + rows.map(r => [names[r.meter], r.date, String(r.value).replace(".", ","), r.source || ""].join(";")).join("\n") + "\n";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = "vesimittari-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+  if (!all.length && $("csv")) $("csv").hidden = true;
+
+  if ($("imp")) {
+  // ---- Import ----
+  let parsed = [];
+  function parseLines(text) {
+    const ok = [], bad = [], yearNow = new Date().getFullYear();
+    const num = (t) => { const v = t.replace(",", "."); return /^\d+(\.\d+)?$/.test(v) ? Number(v) : null; };
+    text.split(/\r?\n/).forEach((line, i) => {
+      const raw = line.trim(); if (!raw) return;
+      let toks = raw.split(/[\s;\t]+/).filter(Boolean), meter = null;
+      if (/^(mittari|meter)$/i.test(toks[0])) return;  // CSV header
+      const mt = toks[0].toLowerCase();
+      if (/^(kylm|cold|k$)/.test(mt)) { meter = "kylma"; toks.shift(); }
+      else if (/^(l[äa]mmin|l[äa]mp|hot|l$)/.test(mt)) { meter = "lammin"; toks.shift(); }
+      let date = null, t = toks.shift() || "";
+      let m;
+      if ((m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) date = [m[1], m[2], m[3]];
+      else if ((m = t.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})?$/))) date = [m[3] ? (m[3].length === 2 ? "20" + m[3] : m[3]) : String(yearNow), m[2], m[1]];
+      const iso = date ? date[0] + "-" + date[1].padStart(2, "0") + "-" + date[2].padStart(2, "0") : null;
+      const valid = iso && !isNaN(toUTC(iso)) && fromUTC(toUTC(iso)) === iso;
+      while (toks.length && /^[a-zåäö]+[a-zåäö, ]*$/i.test(toks[toks.length - 1])) toks.pop();  // e.g. "käsin" from CSV
+      const vals = toks.map(num);
+      if (!valid || !vals.length || vals.some(v => v == null) || vals.length > (meter ? 1 : 2)) { bad.push(i + 1); return; }
+      if (meter) ok.push({ meter, date: iso, value: vals[0] });
+      else { ok.push({ meter: "kylma", date: iso, value: vals[0] }); if (vals.length > 1) ok.push({ meter: "lammin", date: iso, value: vals[1] }); }
+    });
+    return { ok, bad };
+  }
+  $("imp").addEventListener("input", () => { $("imp-save").disabled = true; $("imp-msg").textContent = ""; });
+  $("imp-check").onclick = () => {
+    const { ok, bad } = parseLines($("imp").value); parsed = ok;
+    const msg = $("imp-msg"); msg.innerHTML = "";
+    if (!ok.length && !bad.length) { msg.textContent = "Kenttä on tyhjä."; return; }
+    const nc = ok.filter(r => r.meter === "kylma").length, nh = ok.length - nc;
+    const replaced = ok.filter(r => all.some(a => a.meter === r.meter && a.date === r.date)).length;
+    const p = document.createElement("div");
+    p.textContent = `Luettiin ${ok.length} lukemaa (kylmä ${nc}, lämmin ${nh}).` + (replaced ? ` ${replaced} niistä korvaa saman päivän aiemman lukeman.` : "");
+    msg.append(p);
+    if (bad.length) { const b = document.createElement("div"); b.className = "bad"; b.textContent = "Näitä rivejä ei ymmärretty: " + bad.join(", ") + ". Korjaa ne tai poista ennen tallennusta."; msg.append(b); }
+    $("imp-save").disabled = !ok.length;
+  };
+  $("imp-save").onclick = () => {
+    if (!parsed.length) return;
+    const key = (r) => r.meter + "|" + r.date, map = new Map(all.map(r => [key(r), r]));
+    for (const r of parsed) map.set(key(r), { ...r, source: "tuotu" });
+    try { localStorage.setItem("vesimittari-lukemat", JSON.stringify([...map.values()])); }
+    catch (e) { $("imp-msg").textContent = "Tallennus ei onnistunut tähän selaimeen."; return; }
+    location.reload();
+  };
+
+  // ---- Read handwritten paper with Gemini ----
+  function toJpeg(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => { URL.revokeObjectURL(url); const k = Math.min(1, 2400 / Math.max(im.width, im.height)), c = document.createElement("canvas");
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        res(c.toDataURL("image/jpeg", 0.9).split(",")[1]); };
+      im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Kuvaa ei voitu avata")); };
+      im.src = url;
+    });
+  }
+  async function onPaper(ev) {
+    const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
+    const msg = $("imp-msg"); msg.className = "note";
+    let key = "", model = "gemini-3.8-flash";
+    try { key = JSON.parse(localStorage.getItem("vesimittari-gemini-key") || '""'); model = JSON.parse(localStorage.getItem("vesimittari-gemini-model") || '""') || model; } catch (e) {}
+    if (!key) { msg.textContent = "Paperin lukeminen vaatii Gemini-avaimen. Lisää se etusivun alaosasta (Kuvan tunnistus), tai kirjoita lukemat kenttään käsin."; return; }
+    msg.textContent = "Luetaan paperia… tämä voi kestää hetken.";
+    const year = new Date().getFullYear();
+    const prompt = `The photo shows a handwritten list of household water meter readings (Finnish). Each entry has a date and one or two readings in cubic metres: cold water (kylmä, K) and hot water (lämmin, L). Decimal separator may be a comma.\n` +
+      `Transcribe every entry. If the year is missing, use ${year}. If you cannot tell which reading is cold and which is hot, assume the first is cold and the second hot, unless the column headers say otherwise. Do not invent values; skip entries you cannot read and mention them in the note.\n` +
+      `Reply with only JSON: {"rows": [{"date": "YYYY-MM-DD", "cold": 205.31 or null, "hot": 67.12 or null}], "note": "short note in Finnish about anything uncertain, empty if none"}`;
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: await toJpeg(f) } }] }], generationConfig: { responseMimeType: "application/json", temperature: 0 } })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(r.status === 429 ? "Ilmaisen tason raja täyttyi, yritä myöhemmin." : (j.error && j.error.message) || "HTTP " + r.status);
+      const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+      const res = JSON.parse((text.match(/\{[\s\S]*\}/) || ["{}"])[0]);
+      const rows = (Array.isArray(res.rows) ? res.rows : []).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x.date));
+      if (!rows.length) { msg.textContent = res.note || "Paperista ei löytynyt lukemia. Ota tarkempi kuva."; return; }
+      const f3 = (v) => String(v).replace(".", ",");
+      $("imp").value = rows.sort((a, b) => a.date < b.date ? -1 : 1).map(x => {
+        const [y, m, d] = x.date.split("-").map(Number), dt = d + "." + m + "." + y;
+        const c = typeof x.cold === "number", h = typeof x.hot === "number";
+        return c && h ? `${dt} ${f3(x.cold)} ${f3(x.hot)}` : c ? `kylmä ${dt} ${f3(x.cold)}` : h ? `lämmin ${dt} ${f3(x.hot)}` : `${dt} ?`;
+      }).join("\n");
+      $("imp-save").disabled = true;
+      msg.textContent = (res.note ? res.note + " " : "") + "Vertaa rivejä paperiin, korjaa virheet ja paina Tarkista.";
+    } catch (e) { msg.textContent = "Paperin lukeminen epäonnistui: " + e.message; }
+  }
+  $("paper").addEventListener("change", onPaper);
+  $("paper2").addEventListener("change", onPaper);
+
+  }
+  if ($("price-list")) {
+  // ---- Price UI ----
+  const NAMES = { kylma: "Kylmä", lammin: "Lämmin" };
+  function renderPrices() {
+    const el = $("price-list"); el.innerHTML = "";
+    if (!prices.length) { const p = document.createElement("p"); p.className = "note"; p.textContent = "Hintoja ei ole vielä syötetty."; el.append(p); return; }
+    for (const pr of [...prices].sort((a, b) => a.meter === b.meter ? (a.from < b.from ? 1 : -1) : (a.meter < b.meter ? -1 : 1))) {
+      const row = document.createElement("div"); row.className = "prow";
+      const sw = document.createElement("span"); sw.className = "sw " + (pr.meter === "kylma" ? "c" : "h");
+      const t = document.createElement("span"); t.textContent = NAMES[pr.meter] + " " + fiDate(pr.from) + " alkaen";
+      const v = document.createElement("span"); v.className = "pr"; v.textContent = pr.price.toLocaleString("fi-FI", { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + " €/m³";
+      const del = document.createElement("button"); del.className = "del"; del.type = "button"; del.textContent = "Poista";
+      del.setAttribute("aria-label", "Poista hinta " + NAMES[pr.meter] + " " + fiDate(pr.from));
+      del.onclick = () => {
+        if (!del.classList.contains("armed")) { del.classList.add("armed"); del.textContent = "Vahvista"; setTimeout(() => { del.classList.remove("armed"); del.textContent = "Poista"; }, 3000); return; }
+        prices = prices.filter(x => x !== pr); savePrices(); renderPrices(); render();
+      };
+      row.append(sw, t, v, del); el.append(row);
+    }
+  }
+  $("p-from").value = days[0] || new Date().toISOString().slice(0, 10);
+  $("p-add").onclick = () => {
+    const meter = $("p-meter").value, from = $("p-from").value, raw = $("p-price").value.trim().replace(/\s/g, "").replace(",", ".");
+    if (!from) { $("p-from").focus(); return; }
+    if (!/^\d+(\.\d+)?$/.test(raw) || Number(raw) <= 0) { $("p-price").focus(); $("p-price").setCustomValidity("Kirjoita hinta, esim. 5,90"); $("p-price").reportValidity(); return; }
+    $("p-price").setCustomValidity("");
+    prices = prices.filter(x => !(x.meter === meter && x.from === from)).concat({ meter, from, price: Number(raw) });
+    savePrices(); $("p-price").value = ""; renderPrices(); render();
+  };
+  $("p-price").addEventListener("input", () => $("p-price").setCustomValidity(""));
+  renderPrices();
+
+  }
+  if ($("bk-export")) {
+  // ---- Backup / restore (JSON) ----
+  const KEYS = { readings: "vesimittari-lukemat", prices: "vesimittari-hinnat", meter: "vesimittari-meter", model: "vesimittari-gemini-model", gkey: "vesimittari-gemini-key", sheet: "vesimittari-sheets-url" };
+  const rd = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
+  const wr = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+  function download(name, text, type) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }
+  $("bk-export").onclick = () => {
+    const data = { app: "vesimittari", version: 1, exported: new Date().toISOString(),
+      readings: rd(KEYS.readings, []), prices: rd(KEYS.prices, []),
+      settings: { meter: rd(KEYS.meter, "kylma"), geminiModel: rd(KEYS.model, "") } };
+    if ($("bk-secrets").checked) { data.settings.geminiKey = rd(KEYS.gkey, ""); data.settings.sheetsUrl = rd(KEYS.sheet, ""); }
+    download("vesimittari-varmuuskopio-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify(data, null, 2), "application/json");
+  };
+  let incoming = null;
+  const validR = (r) => r && (r.meter === "kylma" || r.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && typeof r.value === "number" && isFinite(r.value);
+  const validP = (p) => p && (p.meter === "kylma" || p.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(p.from) && typeof p.price === "number" && isFinite(p.price);
+  $("bk-file").addEventListener("change", async (ev) => {
+    const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
+    const info = $("bk-info"); $("bk-preview").hidden = false; info.className = "note"; info.textContent = "Luetaan tiedostoa " + f.name + "…";
+    $("bk-preview").scrollIntoView({ behavior: "smooth", block: "center" });
+    $("bk-merge").hidden = $("bk-replace").hidden = true;
+    try {
+      const txt = (await f.text()).replace(/^\uFEFF/, "").trim();
+      const d = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1) || txt);
+      if (!d || d.app !== "vesimittari" || !Array.isArray(d.readings)) throw new Error("Tiedosto ei ole vesimittarin varmuuskopio.");
+      const rs = d.readings.filter(validR), ps = (Array.isArray(d.prices) ? d.prices : []).filter(validP);
+      const skipped = d.readings.length - rs.length;
+      incoming = { readings: rs.map(r => ({ meter: r.meter, date: r.date, value: r.value, source: String(r.source || "varmuuskopio") })), prices: ps.map(p => ({ meter: p.meter, from: p.from, price: p.price })), settings: d.settings || {} };
+      const dates = rs.map(r => r.date).sort();
+      info.textContent = `Varmuuskopio ${d.exported ? fiDate(String(d.exported).slice(0, 10)) : ""}: ${rs.length} lukemaa` + (dates.length ? ` (${fiDate(dates[0])}–${fiDate(dates[dates.length - 1])})` : "") + `, ${ps.length} hintaa` +
+        (incoming.settings.geminiKey ? ", Gemini-avain" : "") + (incoming.settings.sheetsUrl ? ", taulukon osoite" : "") + "." +
+        (skipped ? ` ${skipped} virheellistä riviä ohitetaan.` : "") + ` Laitteella on nyt ${all.length} lukemaa. Yhdistä lisää puuttuvat ja korvaa saman päivän lukemat varmuuskopion arvoilla.`;
+      $("bk-merge").hidden = $("bk-replace").hidden = false;
+    } catch (e) { incoming = null; info.className = "note bad"; info.textContent = e instanceof SyntaxError ? "Tiedosto ei ole kelvollista JSON:ia." : e.message; }
+  });
+  function applySettings(st) {
+    if (st.meter === "kylma" || st.meter === "lammin") wr(KEYS.meter, st.meter);
+    if (typeof st.geminiModel === "string" && st.geminiModel) wr(KEYS.model, st.geminiModel);
+    if (typeof st.geminiKey === "string" && st.geminiKey) wr(KEYS.gkey, st.geminiKey);
+    if (typeof st.sheetsUrl === "string" && /^https:\/\/script\.google\.com\/.+\/exec$/.test(st.sheetsUrl)) wr(KEYS.sheet, st.sheetsUrl);
+  }
+  $("bk-merge").onclick = () => {
+    if (!incoming) return;
+    const key = (r) => r.meter + "|" + r.date, m = new Map(rd(KEYS.readings, []).filter(validR).map(r => [key(r), r]));
+    for (const r of incoming.readings) m.set(key(r), r);
+    const pk = (p) => p.meter + "|" + p.from, pm = new Map(rd(KEYS.prices, []).filter(validP).map(p => [pk(p), p]));
+    for (const p of incoming.prices) pm.set(pk(p), p);
+    try { wr(KEYS.readings, [...m.values()]); wr(KEYS.prices, [...pm.values()]); applySettings(incoming.settings); } catch (e) { $("bk-info").textContent = "Tallennus epäonnistui."; return; }
+    location.reload();
+  };
+  $("bk-replace").onclick = () => {
+    if (!incoming) return;
+    const b = $("bk-replace");
+    if (!b.classList.contains("danger")) { b.classList.add("danger"); b.textContent = "Vahvista: nykyiset " + all.length + " lukemaa poistetaan"; setTimeout(() => { b.classList.remove("danger"); b.textContent = "Korvaa kaikki tiedot"; }, 4000); return; }
+    try { wr(KEYS.readings, incoming.readings); wr(KEYS.prices, incoming.prices); applySettings(incoming.settings); } catch (e) { $("bk-info").textContent = "Tallennus epäonnistui."; return; }
+    location.reload();
+  };
+  $("bk-cancel").onclick = () => { incoming = null; $("bk-preview").hidden = true; };
+
+  }
+  // ---- Gemini & Sheets settings ----
+  if ($("gem-card")) {
+    const get = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
+    const set = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+    const toast = (m) => { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); };
+    const DEF = "gemini-3.8-flash";
+    let gkey = get("vesimittari-gemini-key", ""), gmodel = get("vesimittari-gemini-model", DEF) || DEF;
+    $("gkey").value = gkey; $("gmodel").value = gmodel;
+    const gstate = () => { $("gem-state").textContent = gkey ? "Tunnistus on käytössä mallilla " + gmodel + "." : "Tunnistus vaatii ilmaisen Gemini API -avaimen. Ilman avainta lukema kirjoitetaan käsin."; };
+    gstate();
+    $("gsave").onclick = () => { gkey = $("gkey").value.trim(); gmodel = $("gmodel").value.trim() || DEF; $("gmodel").value = gmodel; set("vesimittari-gemini-key", gkey); set("vesimittari-gemini-model", gmodel); gstate(); toast(gkey ? "Tallennettu" : "Avain puuttuu"); };
+    $("gclear").onclick = () => { gkey = ""; $("gkey").value = ""; set("vesimittari-gemini-key", ""); gstate(); toast("Avain poistettu"); };
+
+    const NAMES = { kylma: "Kylmä", lammin: "Lämmin" }, REV = { "Kylmä": "kylma", "Lämmin": "lammin" };
+    let sheetUrl = get("vesimittari-sheets-url", "");
+    $("gs").value = $("gs-code").textContent.trim(); $("url").value = sheetUrl;
+    const sstate = () => { $("sheet-state").textContent = sheetUrl ? "Kytketty. Lukemat tallentuvat Google-taulukkoon ja tähän puhelimeen." : "Ei kytketty. Lukemat tallentuvat vain tähän puhelimeen."; };
+    sstate();
+    $("copy").onclick = async () => { try { await navigator.clipboard.writeText($("gs").value); toast("Koodi kopioitu"); } catch (e) { $("gs").select(); toast("Valitse ja kopioi koodi"); } };
+    $("connect").onclick = async () => {
+      const u = $("url").value.trim();
+      if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)) { toast("URL:n pitää alkaa script.google.com ja päättyä /exec"); return; }
+      const btn = $("connect"); btn.disabled = true;
+      try {
+        const j = await (await fetch(u)).json(); if (!j.ok) throw new Error();
+        const remote = j.rows.filter(x => REV[x.meter] && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && isFinite(x.value)).map(x => ({ meter: REV[x.meter], date: x.date, value: Number(x.value), source: x.source || "taulukko" }));
+        const local = get("vesimittari-lukemat", []), key = (r) => r.meter + "|" + r.date, rk = new Set(remote.map(key));
+        const localOnly = local.filter(r => !rk.has(key(r)));
+        for (const r of localOnly) {
+          const res = await fetch(u, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "save", meter: NAMES[r.meter], date: r.date, value: r.value, source: r.source }) });
+          const jj = await res.json(); if (!jj.ok) throw new Error();
+        }
+        const m = new Map(local.map(r => [key(r), r])); for (const r of remote) m.set(key(r), r);
+        set("vesimittari-lukemat", [...m.values()]); set("vesimittari-sheets-url", u); sheetUrl = u; sstate();
+        toast("Kytketty" + (localOnly.length ? ", " + localOnly.length + " lukemaa lähetetty taulukkoon" : ""));
+      } catch (e) { toast("Yhteys ei toiminut. Tarkista URL ja että käyttöoikeus on Kuka tahansa."); }
+      finally { btn.disabled = false; }
+    };
+    $("disconnect").onclick = () => { sheetUrl = ""; set("vesimittari-sheets-url", ""); $("url").value = ""; sstate(); toast("Taulukko irrotettu"); };
+  }
+
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+  render();
+})();
+</script>
+<nav class="tabbar" aria-label="Päävalikko"><a href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Lukema</span></a><a href="historia.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Historia</span></a><a href="raportti.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg><span>Raportti</span></a><a href="asetukset.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Asetukset</span></a></nav>
+<script>(()=>{const b=document.querySelector(".appbar");if(!b)return;const f=()=>b.classList.toggle("scrolled",scrollY>4);addEventListener("scroll",f,{passive:true});f();})();</script>
+</body>
+</html>
