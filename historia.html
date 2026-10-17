@@ -80,6 +80,9 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
 .btn.primary { background: var(--cold); color: #fff; border-color: var(--cold); }
 .btn:disabled { opacity: .5; }
 .bad { color: var(--hot); }
+.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.chk input { width: 18px; height: 18px; margin-top: 2px; flex: none; }
+.btn.danger { background: var(--hot); color: #fff; border-color: var(--hot); }
 .gal { align-self: center; font-size: 14px; font-weight: 600; color: var(--cold); text-decoration: underline; cursor: pointer; }
 .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .pick { position: relative; overflow: hidden; text-align: center; }
@@ -173,7 +176,24 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
       </div>
     </section>
 
-    <button class="btn" type="button" id="csv">Lataa lukemat CSV-tiedostona</button>
+    <section class="card" id="backup-card">
+      <h2>Varmuuskopio</h2>
+      <p class="note">Varmuuskopio sisältää kaikki lukemat, hinnat ja asetukset yhtenä JSON-tiedostona. Säilytä se esimerkiksi Google Drivessa. Sen avulla tiedot saa palautettua tai siirrettyä uuteen puhelimeen.</p>
+      <label class="chk" for="bk-secrets"><input type="checkbox" id="bk-secrets"> Ota mukaan Gemini-avain ja Google-taulukon osoite (puhelimen vaihtoa varten)</label>
+      <div class="row2">
+        <button class="btn primary" type="button" id="bk-export">Lataa varmuuskopio</button>
+        <div class="btn pick">Palauta varmuuskopiosta<input type="file" id="bk-file" accept=".json,application/json" aria-label="Palauta varmuuskopiosta"></div>
+      </div>
+      <div id="bk-preview" hidden style="display:flex;flex-direction:column;gap:10px">
+        <div class="note" id="bk-info"></div>
+        <div class="row2">
+          <button class="btn primary" type="button" id="bk-merge">Yhdistä nykyisiin</button>
+          <button class="btn" type="button" id="bk-replace">Korvaa kaikki tiedot</button>
+        </div>
+        <button class="btn" type="button" id="bk-cancel">Peruuta</button>
+      </div>
+      <button class="btn" type="button" id="csv">Lataa lukemat CSV-tiedostona (Excel)</button>
+    </section>
   </div>
 </div>
 
@@ -222,7 +242,7 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
   const costOf = (meter, map, d) => { const p = priceAt(meter, d), l = map.get(d); return p == null || l == null ? null : l / 1000 * p; };
   const eur = (n) => n.toLocaleString("fi-FI", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 
-  if (!days.length) { $("empty").hidden = false; for (const el of $("content").children) if (el.id !== "import-card" && el.id !== "price-card") el.hidden = true; }
+  if (!days.length) { $("empty").hidden = false; for (const el of $("content").children) if (!["import-card", "price-card", "backup-card"].includes(el.id)) el.hidden = true; }
 
   let range = 30;
   for (const b of document.querySelectorAll(".ranges button")) b.onclick = () => {
@@ -490,6 +510,65 @@ textarea { width: 100%; font: 15px ui-monospace, Menlo, Consolas, monospace; pad
   };
   $("p-price").addEventListener("input", () => $("p-price").setCustomValidity(""));
   renderPrices();
+
+  // ---- Backup / restore (JSON) ----
+  const KEYS = { readings: "vesimittari-lukemat", prices: "vesimittari-hinnat", meter: "vesimittari-meter", model: "vesimittari-gemini-model", gkey: "vesimittari-gemini-key", sheet: "vesimittari-sheets-url" };
+  const rd = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
+  const wr = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+  function download(name, text, type) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }
+  $("bk-export").onclick = () => {
+    const data = { app: "vesimittari", version: 1, exported: new Date().toISOString(),
+      readings: rd(KEYS.readings, []), prices: rd(KEYS.prices, []),
+      settings: { meter: rd(KEYS.meter, "kylma"), geminiModel: rd(KEYS.model, "") } };
+    if ($("bk-secrets").checked) { data.settings.geminiKey = rd(KEYS.gkey, ""); data.settings.sheetsUrl = rd(KEYS.sheet, ""); }
+    download("vesimittari-varmuuskopio-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify(data, null, 2), "application/json");
+  };
+  let incoming = null;
+  const validR = (r) => r && (r.meter === "kylma" || r.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && typeof r.value === "number" && isFinite(r.value);
+  const validP = (p) => p && (p.meter === "kylma" || p.meter === "lammin") && /^\d{4}-\d{2}-\d{2}$/.test(p.from) && typeof p.price === "number" && isFinite(p.price);
+  $("bk-file").addEventListener("change", async (ev) => {
+    const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
+    const info = $("bk-info"); $("bk-preview").hidden = false; info.className = "note";
+    $("bk-merge").hidden = $("bk-replace").hidden = true;
+    try {
+      const d = JSON.parse(await f.text());
+      if (!d || d.app !== "vesimittari" || !Array.isArray(d.readings)) throw new Error("Tiedosto ei ole vesimittarin varmuuskopio.");
+      const rs = d.readings.filter(validR), ps = (Array.isArray(d.prices) ? d.prices : []).filter(validP);
+      const skipped = d.readings.length - rs.length;
+      incoming = { readings: rs.map(r => ({ meter: r.meter, date: r.date, value: r.value, source: String(r.source || "varmuuskopio") })), prices: ps.map(p => ({ meter: p.meter, from: p.from, price: p.price })), settings: d.settings || {} };
+      const dates = rs.map(r => r.date).sort();
+      info.textContent = `Varmuuskopio ${d.exported ? fiDate(String(d.exported).slice(0, 10)) : ""}: ${rs.length} lukemaa` + (dates.length ? ` (${fiDate(dates[0])}–${fiDate(dates[dates.length - 1])})` : "") + `, ${ps.length} hintaa` +
+        (incoming.settings.geminiKey ? ", Gemini-avain" : "") + (incoming.settings.sheetsUrl ? ", taulukon osoite" : "") + "." +
+        (skipped ? ` ${skipped} virheellistä riviä ohitetaan.` : "") + ` Laitteella on nyt ${all.length} lukemaa. Yhdistä lisää puuttuvat ja korvaa saman päivän lukemat varmuuskopion arvoilla.`;
+      $("bk-merge").hidden = $("bk-replace").hidden = false;
+    } catch (e) { incoming = null; info.className = "note bad"; info.textContent = e instanceof SyntaxError ? "Tiedosto ei ole kelvollista JSON:ia." : e.message; }
+  });
+  function applySettings(st) {
+    if (st.meter === "kylma" || st.meter === "lammin") wr(KEYS.meter, st.meter);
+    if (typeof st.geminiModel === "string" && st.geminiModel) wr(KEYS.model, st.geminiModel);
+    if (typeof st.geminiKey === "string" && st.geminiKey) wr(KEYS.gkey, st.geminiKey);
+    if (typeof st.sheetsUrl === "string" && /^https:\/\/script\.google\.com\/.+\/exec$/.test(st.sheetsUrl)) wr(KEYS.sheet, st.sheetsUrl);
+  }
+  $("bk-merge").onclick = () => {
+    if (!incoming) return;
+    const key = (r) => r.meter + "|" + r.date, m = new Map(rd(KEYS.readings, []).filter(validR).map(r => [key(r), r]));
+    for (const r of incoming.readings) m.set(key(r), r);
+    const pk = (p) => p.meter + "|" + p.from, pm = new Map(rd(KEYS.prices, []).filter(validP).map(p => [pk(p), p]));
+    for (const p of incoming.prices) pm.set(pk(p), p);
+    try { wr(KEYS.readings, [...m.values()]); wr(KEYS.prices, [...pm.values()]); applySettings(incoming.settings); } catch (e) { $("bk-info").textContent = "Tallennus epäonnistui."; return; }
+    location.reload();
+  };
+  $("bk-replace").onclick = () => {
+    if (!incoming) return;
+    const b = $("bk-replace");
+    if (!b.classList.contains("danger")) { b.classList.add("danger"); b.textContent = "Vahvista: nykyiset " + all.length + " lukemaa poistetaan"; setTimeout(() => { b.classList.remove("danger"); b.textContent = "Korvaa kaikki tiedot"; }, 4000); return; }
+    try { wr(KEYS.readings, incoming.readings); wr(KEYS.prices, incoming.prices); applySettings(incoming.settings); } catch (e) { $("bk-info").textContent = "Tallennus epäonnistui."; return; }
+    location.reload();
+  };
+  $("bk-cancel").onclick = () => { incoming = null; $("bk-preview").hidden = true; };
 
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 150); });
   render();

@@ -16,6 +16,13 @@ body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 var(-
 [hidden] { display: none !important; }
 .bar { max-width: 760px; margin: 0 auto 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 .bar a { color: var(--cold); font-weight: 600; text-decoration: none; }
+.ctl { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.bar input[type=date] { font: 500 15px var(--f-body); padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--fg); }
+.trend svg { width: 100%; height: auto; display: block; }
+.trend text { fill: var(--muted); font: 11px var(--f-body); font-variant-numeric: tabular-nums; }
+.trend .lbl { fill: var(--fg); font-weight: 600; }
+.trend h3 { font-size: 13px; margin: 10px 0 2px; display: flex; align-items: center; }
+.up { color: var(--hot); } .down { color: #2e7d4f; }
 .bar select { font: 500 15px var(--f-body); padding: 9px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--fg); }
 .btn { font: 600 15px var(--f-body); border-radius: 10px; padding: 11px 16px; border: 0; background: var(--cold); color: #fff; cursor: pointer; }
 .paper { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 28px 28px 32px; }
@@ -45,14 +52,18 @@ tfoot td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--fg); 
   .bar, .hint { display: none !important; }
   .paper { border: 0; padding: 0; max-width: none; }
   .scroll { overflow: visible; }
-  tr { break-inside: avoid; }
+  tr, .tchart { break-inside: avoid; }
 }
 </style>
 </head>
 <body>
 <div class="bar">
   <a href="historia.html">← Historia</a>
-  <select id="month" aria-label="Kuukausi"></select>
+  <div class="ctl">
+    <select id="mode" aria-label="Raportin tyyppi"><option value="kk">Kuukausi</option><option value="oma">Oma aikaväli</option></select>
+    <select id="month" aria-label="Kuukausi"></select>
+    <span id="range" hidden><input type="date" id="from" aria-label="Alkaen"> – <input type="date" id="to" aria-label="Päättyen"></span>
+  </div>
   <button class="btn" type="button" id="pdf">Tallenna PDF</button>
 </div>
 <div class="paper" id="paper"></div>
@@ -85,32 +96,54 @@ tfoot td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--fg); 
   const dc = daily("kylma"), dh = daily("lammin");
   const months = [...new Set([...dc.keys(), ...dh.keys(), ...all.map(r => r.date)].map(d => d.slice(0, 7)))].sort().reverse();
 
-  const sel = $("month");
-  if (!months.length) { $("paper").innerHTML = "<h1>Ei tietoja</h1><p class='sub'>Raportti tarvitsee vähintään kaksi lukemaa. Tallenna lukemia etusivulla.</p>"; sel.hidden = true; $("pdf").hidden = true; return; }
+  const sel = $("month"), modeSel = $("mode");
+  if (!months.length) { $("paper").innerHTML = "<h1>Ei tietoja</h1><p class='sub'>Raportti tarvitsee vähintään kaksi lukemaa. Tallenna lukemia etusivulla.</p>"; $("pdf").hidden = true; document.querySelector(".ctl").hidden = true; return; }
   for (const m of months) { const o = document.createElement("option"); const [y, mo] = m.split("-").map(Number); o.value = m; o.textContent = MONTHS[mo - 1] + " " + y; sel.append(o); }
-  const want = new URLSearchParams(location.search).get("kk");
-  sel.value = months.includes(want) ? want : months[0];
-  sel.onchange = () => { history.replaceState(null, "", "?kk=" + sel.value); render(); };
+  const allDays = [...new Set([...dc.keys(), ...dh.keys()])].sort();
+  const q = new URLSearchParams(location.search);
+  sel.value = months.includes(q.get("kk")) ? q.get("kk") : months[0];
+  const lastDay = allDays[allDays.length - 1] || new Date().toISOString().slice(0, 10);
+  $("to").value = q.get("loppu") || lastDay;
+  $("from").value = q.get("alku") || (() => { const d = new Date(toUTC(lastDay)); d.setUTCMonth(d.getUTCMonth() - 2); d.setUTCDate(1); return fromUTC(d.getTime()); })();
+  if (q.get("alku")) modeSel.value = "oma";
+  function sync() {
+    const oma = modeSel.value === "oma";
+    sel.hidden = oma; $("range").hidden = !oma;
+    history.replaceState(null, "", oma ? "?alku=" + $("from").value + "&loppu=" + $("to").value : "?kk=" + sel.value);
+    render();
+  }
+  modeSel.onchange = sync; sel.onchange = sync; $("from").onchange = sync; $("to").onchange = sync;
   $("pdf").onclick = () => window.print();
 
   function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function row(cells, tag = "td") { const tr = document.createElement("tr"); for (const c of cells) { const td = document.createElement(tag); if (c instanceof Node) td.append(c); else td.textContent = c; tr.append(td); } return tr; }
   const label = (cls, t) => { const s = document.createElement("span"); s.append(el("span", "sw " + cls), t); return s; };
+  const monthName = (m) => { const [y, mo] = m.split("-").map(Number); return MONTHS[mo - 1] + " " + y; };
+  const costDay = (meter, map, d) => { const p = priceAt(meter, d), l = map.get(d); return p != null && l != null ? l / 1000 * p : 0; };
 
   function render() {
-    const m = sel.value, [y, mo] = m.split("-").map(Number);
-    const first = m + "-01", nDays = new Date(Date.UTC(y, mo, 0)).getUTCDate(), last = m + "-" + String(nDays).padStart(2, "0");
-    document.title = "Vesimittari " + MONTHS[mo - 1] + " " + y;
-    const days = []; for (let d = 1; d <= nDays; d++) days.push(m + "-" + String(d).padStart(2, "0"));
+    let from, to, title;
+    if (modeSel.value === "oma") {
+      from = $("from").value; to = $("to").value;
+      if (!from || !to) return;
+      if (from > to) [from, to] = [to, from];
+      title = "Vesimittarin raportti · " + fiDate(from) + "–" + fiDate(to);
+    } else {
+      const m = sel.value, [y, mo] = m.split("-").map(Number), n = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+      from = m + "-01"; to = m + "-" + String(n).padStart(2, "0");
+      title = "Vesimittarin kuukausiraportti · " + monthName(m);
+    }
+    document.title = title.replace("Vesimittarin ", "Vesimittari ");
+    const days = []; for (let t = toUTC(from); t <= toUTC(to); t += DAY) days.push(fromUTC(t));
     const hasP = prices.length > 0;
-    const sum = (map) => days.reduce((s, d) => s + (map.get(d) || 0), 0);
-    const cost = (meter, map) => days.reduce((s, d) => { const p = priceAt(meter, d), l = map.get(d); return s + (p != null && l != null ? l / 1000 * p : 0); }, 0);
-    const lc = sum(dc), lh = sum(dh), ec = cost("kylma", dc), eh = cost("lammin", dh);
+    const sum = (map, ds) => ds.reduce((s, d) => s + (map.get(d) || 0), 0);
+    const cost = (meter, map, ds) => ds.reduce((s, d) => s + costDay(meter, map, d), 0);
     const covered = days.filter(d => dc.has(d) || dh.has(d));
+    const lc = sum(dc, days), lh = sum(dh, days), ec = cost("kylma", dc, days), eh = cost("lammin", dh, days);
 
     const P = $("paper"); P.innerHTML = "";
-    P.append(el("h1", "", "Vesimittarin kuukausiraportti · " + MONTHS[mo - 1] + " " + y));
-    P.append(el("p", "sub", "Jakso " + fiDate(first) + "–" + fiDate(last) + ". Kulutusta laskettu " + covered.length + " päivälle " + nDays + ":stä. Tulostettu " + fiDate(new Date().toISOString().slice(0, 10)) + "."));
+    P.append(el("h1", "", title));
+    P.append(el("p", "sub", "Jakso " + fiDate(from) + "–" + fiDate(to) + " (" + days.length + " vrk). Kulutusta laskettu " + covered.length + " päivälle. Tulostettu " + fiDate(new Date().toISOString().slice(0, 10)) + "."));
 
     const big = el("div", "big");
     const tile = (v, t) => { const d = el("div"); d.append(el("b", "", v), el("small", "", t)); big.append(d); };
@@ -119,10 +152,10 @@ tfoot td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--fg); 
     tile(hasP ? eur(ec + eh) : "–", hasP ? "Vesimaksut yhteensä" : "Hintoja ei syötetty");
     P.append(big);
 
-    // Summary per meter
+    // Meters
     P.append(el("h2", "", "Mittarit"));
-    const readsIn = (meter) => all.filter(r => r.meter === meter && r.date >= first && r.date <= last).sort((a, b) => a.date < b.date ? -1 : 1);
-    const before = (meter) => all.filter(r => r.meter === meter && r.date < first).sort((a, b) => a.date < b.date ? -1 : 1).pop();
+    const readsIn = (meter) => all.filter(r => r.meter === meter && r.date >= from && r.date <= to).sort((a, b) => a.date < b.date ? -1 : 1);
+    const before = (meter) => all.filter(r => r.meter === meter && r.date < from).sort((a, b) => a.date < b.date ? -1 : 1).pop();
     const t1 = document.createElement("table");
     t1.append(row(["Mittari", "Alkulukema", "Loppulukema", "Kulutus m³", ...(hasP ? ["€ / m³", "Maksu"] : [])], "th"));
     for (const [meter, name, cls, l, e] of [["kylma", "Kylmä vesi", "c", lc, ec], ["lammin", "Lämmin vesi", "h", lh, eh]]) {
@@ -134,23 +167,82 @@ tfoot td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--fg); 
     const tf = document.createElement("tfoot"); tf.append(row(["Yhteensä", "", "", fmt((lc + lh) / 1000, 3), ...(hasP ? ["", eur(ec + eh)] : [])])); t1.append(tf);
     const s1 = el("div", "scroll"); s1.append(t1); P.append(s1);
 
-    // Daily table
-    P.append(el("h2", "", "Päivittäinen kulutus, litraa"));
-    const t2 = document.createElement("table"); t2.className = "daily";
-    t2.append(row(["Päivä", label("c", "Kylmä"), label("h", "Lämmin"), "Yhteensä", ...(hasP ? ["€"] : [])], "th"));
-    for (const d of days) {
-      const c = dc.get(d), h = dh.get(d), wd = new Date(toUTC(d)).getUTCDay();
-      const dayCost = hasP ? [["kylma", c], ["lammin", h]].reduce((s, [mt, l]) => { const p = priceAt(mt, d); return s + (p != null && l != null ? l / 1000 * p : 0); }, 0) : 0;
-      const tr = row([new Date(toUTC(d)).toLocaleDateString("fi-FI", { weekday: "short", timeZone: "UTC" }) + " " + fiDate(d),
-        c != null ? fmt(Math.round(c), 0) : "–", h != null ? fmt(Math.round(h), 0) : "–",
-        c != null || h != null ? fmt(Math.round((c || 0) + (h || 0)), 0) : "–", ...(hasP ? [c != null || h != null ? fmt(dayCost, 2) : "–"] : [])]);
-      if (wd === 0 || wd === 6) tr.className = "wknd";
-      t2.append(tr);
+    // Monthly grouping
+    const groups = [];
+    for (const d of days) { const k = d.slice(0, 7); let g = groups[groups.length - 1]; if (!g || g.k !== k) { g = { k, days: [] }; groups.push(g); } g.days.push(d); }
+    for (const g of groups) {
+      const [y, mo] = g.k.split("-").map(Number); g.full = g.days.length === new Date(Date.UTC(y, mo, 0)).getUTCDate();
+      g.cov = g.days.filter(d => dc.has(d) || dh.has(d)).length;
+      g.lc = sum(dc, g.days); g.lh = sum(dh, g.days); g.e = cost("kylma", dc, g.days) + cost("lammin", dh, g.days);
+      const nc = g.days.filter(d => dc.has(d)).length, nh = g.days.filter(d => dh.has(d)).length;
+      g.ac = nc ? g.lc / nc : null; g.ah = nh ? g.lh / nh : null; g.at = g.cov ? (g.lc + g.lh) / g.cov : null;
     }
-    const tf2 = document.createElement("tfoot"); tf2.append(row(["Yhteensä", fmt(Math.round(lc), 0), fmt(Math.round(lh), 0), fmt(Math.round(lc + lh), 0), ...(hasP ? [fmt(ec + eh, 2)] : [])])); t2.append(tf2);
-    const s2 = el("div", "scroll"); s2.append(t2); P.append(s2);
+    if (groups.length > 1) {
+      P.append(el("h2", "", "Kuukausittain"));
+      const t3 = document.createElement("table");
+      t3.append(row(["Kuukausi", label("c", "Kylmä m³"), label("h", "Lämmin m³"), "Yhteensä m³", "l / vrk", "Muutos", ...(hasP ? ["Maksu"] : [])], "th"));
+      let prev = null, partial = false;
+      for (const g of groups) {
+        let ch = "–", cls = "";
+        if (prev != null && g.at != null && prev > 0) { const pct = Math.round((g.at / prev - 1) * 100); ch = (pct > 0 ? "+" : "") + pct + " %"; cls = pct > 0 ? "up" : pct < 0 ? "down" : ""; }
+        const chEl = el("span", cls, ch);
+        if (!g.full) partial = true;
+        t3.append(row([monthName(g.k) + (g.full ? "" : " *"), fmt(g.lc / 1000, 3), fmt(g.lh / 1000, 3), fmt((g.lc + g.lh) / 1000, 3), g.at != null ? fmt(Math.round(g.at), 0) : "–", chEl, ...(hasP ? [eur(g.e)] : [])]));
+        if (g.at != null) prev = g.at;
+      }
+      const tf3 = document.createElement("tfoot"); tf3.append(row(["Yhteensä", fmt(lc / 1000, 3), fmt(lh / 1000, 3), fmt((lc + lh) / 1000, 3), covered.length ? fmt(Math.round((lc + lh) / covered.length), 0) : "–", "", ...(hasP ? [eur(ec + eh)] : [])])); t3.append(tf3);
+      const s3 = el("div", "scroll"); s3.append(t3); P.append(s3);
+      P.append(el("p", "foot", "Muutos verrataan edellisen kuukauden keskikulutukseen (l/vrk), joten vajaatkin kuukaudet ovat vertailukelpoisia." + (partial ? " * Vajaa kuukausi: aikaväli rajaa tai lukemia puuttuu." : "")));
+
+      // Trend charts
+      const tr = el("div", "trend");
+      tr.append(el("h2", "", "Kuukausitrendi, keskimäärin litraa vuorokaudessa"));
+      for (const [key, name, cls, color] of [["ac", "Kylmä vesi", "c", "var(--cold)"], ["ah", "Lämmin vesi", "h", "var(--hot)"]]) {
+        const box = el("div", "tchart"), h3 = el("h3"); h3.append(el("span", "sw " + cls), name); box.append(h3);
+        box.insertAdjacentHTML("beforeend", trendSvg(groups, key, color)); tr.append(box);
+      }
+      P.append(tr);
+    }
+
+    // Daily table for short ranges
+    if (days.length <= 31) {
+      P.append(el("h2", "", "Päivittäinen kulutus, litraa"));
+      const t2 = document.createElement("table"); t2.className = "daily";
+      t2.append(row(["Päivä", label("c", "Kylmä"), label("h", "Lämmin"), "Yhteensä", ...(hasP ? ["€"] : [])], "th"));
+      for (const d of days) {
+        const c = dc.get(d), h = dh.get(d), wd = new Date(toUTC(d)).getUTCDay();
+        const dcst = costDay("kylma", dc, d) + costDay("lammin", dh, d);
+        const r = row([new Date(toUTC(d)).toLocaleDateString("fi-FI", { weekday: "short", timeZone: "UTC" }) + " " + fiDate(d),
+          c != null ? fmt(Math.round(c), 0) : "–", h != null ? fmt(Math.round(h), 0) : "–",
+          c != null || h != null ? fmt(Math.round((c || 0) + (h || 0)), 0) : "–", ...(hasP ? [c != null || h != null ? fmt(dcst, 2) : "–"] : [])]);
+        if (wd === 0 || wd === 6) r.className = "wknd";
+        t2.append(r);
+      }
+      const tf2 = document.createElement("tfoot"); tf2.append(row(["Yhteensä", fmt(Math.round(lc), 0), fmt(Math.round(lh), 0), fmt(Math.round(lc + lh), 0), ...(hasP ? [fmt(ec + eh, 2)] : [])])); t2.append(tf2);
+      const s2 = el("div", "scroll"); s2.append(t2); P.append(s2);
+    }
 
     P.append(el("p", "foot", "Kulutus lasketaan peräkkäisten lukemien erotuksesta. Jos lukemien välissä on useampi päivä, kulutus jaetaan niille tasan. Lukemat on tallennettu vain tälle laitteelle."));
+  }
+
+  function trendSvg(groups, key, color) {
+    const W = 680, H = 150, L = 40, R = 10, T = 18, B = 22;
+    const vals = groups.map(g => g[key]), max = Math.max(1, ...vals.filter(v => v != null));
+    const raw = max / 3, p10 = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p10, step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p10, top = Math.ceil(max / step) * step;
+    const y = (v) => T + (H - T - B) * (1 - v / top), slot = (W - L - R) / groups.length, bw = Math.min(56, slot * .6);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kuukausitrendi">`;
+    for (let g = 0; g <= top + 1e-9; g += step) s += `<line x1="${L}" x2="${W - R}" y1="${y(g).toFixed(1)}" y2="${y(g).toFixed(1)}" stroke="var(--line)"/><text x="${L - 6}" y="${(y(g) + 4).toFixed(1)}" text-anchor="end">${fmt(g, 0)}</text>`;
+    const every = Math.max(1, Math.ceil(groups.length / 12));
+    groups.forEach((g, i) => {
+      const cx = L + i * slot + slot / 2, v = g[key];
+      if (v != null && v > 0) {
+        const yt = y(v), h = y(0) - yt, x = cx - bw / 2, r = Math.min(4, h);
+        s += `<path d="M${x},${y(0)} V${yt + r} Q${x},${yt} ${x + r},${yt} H${x + bw - r} Q${x + bw},${yt} ${x + bw},${yt + r} V${y(0)} Z" fill="${color}" opacity="${g.full ? 1 : .55}"/>`;
+        if (groups.length <= 12) s += `<text class="lbl" x="${cx}" y="${(yt - 5).toFixed(1)}" text-anchor="middle">${fmt(Math.round(v), 0)}</text>`;
+      }
+      if (i % every === 0) { const [yy, mo] = g.k.split("-").map(Number); s += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${MONTHS[mo - 1].slice(0, 3)}${mo === 1 || i === 0 ? " " + String(yy).slice(2) : ""}</text>`; }
+    });
+    return s + `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)"/></svg>`;
   }
   render();
 })();
