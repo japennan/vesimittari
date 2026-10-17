@@ -100,6 +100,10 @@ ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
 .chart text { fill: var(--muted); font: 11px var(--f-body); }
 .chart .grid { stroke: var(--line); }
 .chart .bar { fill: var(--accent); } .chart .bar.last { fill: var(--fg); }
+.editbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 14px; font-weight: 600; }
+.item.tap { cursor: pointer; border-radius: 8px; }
+.item.tap:active { background: var(--accent-soft); }
+.item.editing { background: var(--accent-soft); margin: 0 -8px; padding-left: 8px; padding-right: 8px; }
 .item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .item:first-child { border-top: 0; }
 .item .d { font-size: 14px; font-weight: 600; }
@@ -181,6 +185,10 @@ button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
         <label class="f" for="v-lammin"><span><span class="dotl"></span>Lämmin vesi (m³)</span><input type="text" id="v-lammin" inputmode="decimal" autocomplete="off"></label>
       </div>
       <button class="btn" type="button" id="save-both">Tallenna molemmat</button>
+    </div>
+    <div class="editbar" id="editbar" hidden>
+      <span id="edit-text"></span>
+      <button type="button" class="btn ghost small" id="edit-cancel">Peruuta</button>
     </div>
     <div class="row">
       <label class="f" for="value">Lukema (m³)<input type="text" id="value" inputmode="decimal" autocomplete="off" placeholder="esim. 123,456"></label>
@@ -281,7 +289,8 @@ button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
     const by = Object.fromEntries(iv.map(x => [x.date, x]));
     const shown = [...rs].reverse().slice(0, showCount);
     for (const r of shown) {
-      const row = document.createElement("div"); row.className = "item";
+      const row = document.createElement("div"); row.className = "item tap" + (editing && editing.meter === r.meter && editing.date === r.date ? " editing" : "");
+      row.onclick = (ev) => { if (!ev.target.closest(".del")) startEdit(r); };
       const d = document.createElement("div"); d.className = "d"; d.textContent = fiDate(r.date);
       const sm = document.createElement("small"); sm.textContent = weekday(r.date) + " · " + (r.source || "käsin"); d.append(sm);
       const v = document.createElement("div"); v.className = "v"; v.textContent = fmt(r.value, 3);
@@ -310,7 +319,7 @@ button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
   function checkWarn() {
     const w = $("warn"), v = parseVal($("value").value), date = $("date").value;
     if (v == null || !date) { w.hidden = true; return; }
-    const rs = readings(), prev = [...rs].reverse().find(r => r.date < date), next = rs.find(r => r.date > date), same = rs.find(r => r.date === date), m = [];
+    const rs = readings(), prev = [...rs].reverse().find(r => r.date < date), next = rs.find(r => r.date > date), same = rs.find(r => r.date === date && !(editing && editing.date === date && editing.meter === r.meter)), m = [];
     if (prev && v < prev.value) m.push(`Lukema on pienempi kuin edellinen (${fmt(prev.value, 3)} m³, ${fiDate(prev.date)}). Tarkista numerot.`);
     else if (prev && (v - prev.value) * 1000 / Math.max(1, dayDiff(prev.date, date)) > 2000) m.push("Kulutus olisi yli 2000 l/vrk. Tarkista numerot.");
     if (next && v > next.value) m.push(`Lukema on suurempi kuin myöhempi lukema ${fiDate(next.date)}.`);
@@ -319,7 +328,7 @@ button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
   }
   $("value").addEventListener("input", () => { source = source === "kuva" ? "kuva, korjattu" : source; checkWarn(); });
   $("date").addEventListener("change", checkWarn);
-  for (const k of Object.keys(METERS)) $("m-" + k).onclick = () => { meter = k; showCount = 7; store.set("vesimittari-meter", k); render(); };
+  for (const k of Object.keys(METERS)) $("m-" + k).onclick = () => { if (editing) { endEdit(); $("value").value = ""; } meter = k; showCount = 7; store.set("vesimittari-meter", k); render(); };
 
   // ---- Photo + Gemini ----
   const GKEY = "vesimittari-gemini-key", GMODEL = "vesimittari-gemini-model", DEFAULT_MODEL = "gemini-3.8-flash";
@@ -442,19 +451,35 @@ button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
     const r = await fetch(sheetUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) });
     const j = await r.json(); if (!j.ok) throw new Error(j.error || "virhe"); return j;
   }
+  let editing = null;
+  function startEdit(r) {
+    editing = r;
+    $("value").value = fmt(r.value, 3).replace(/\s/g, ""); $("date").value = r.date; source = "korjattu";
+    $("edit-text").textContent = "Muokataan " + fiDate(r.date) + " lukemaa";
+    $("editbar").hidden = false; $("save").textContent = "Tallenna muutos";
+    $("preview").hidden = true; $("both").hidden = true; $("confirm").hidden = true;
+    render();
+    $("editbar").scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => $("value").focus(), 300);
+  }
+  function endEdit() { editing = null; $("editbar").hidden = true; $("save").textContent = "Tallenna lukema"; }
+  $("edit-cancel").onclick = () => { endEdit(); $("value").value = ""; $("date").value = localISO(); source = "käsin"; render(); };
+
   $("save").onclick = async () => {
     const v = parseVal($("value").value), date = $("date").value;
     if (v == null) { toast("Kirjoita lukema numeroina, esim. 123,456"); $("value").focus(); return; }
     if (!date) { toast("Valitse päivä"); return; }
     const rec = { meter, date, value: Math.round(v * 1000) / 1000, source };
-    all = all.filter(a => !(a.meter === meter && a.date === date)).concat(rec); store.set(KEY, all);
-    $("value").value = ""; $("preview").hidden = true; $("both").hidden = true; $("confirm").hidden = true; source = "käsin"; render();
+    const moved = editing && editing.meter === meter && editing.date !== date ? editing.date : null, wasEdit = !!editing;
+    all = all.filter(a => !(a.meter === meter && (a.date === date || a.date === moved))).concat(rec); store.set(KEY, all);
+    endEdit();
+    $("value").value = ""; $("date").value = localISO(); $("preview").hidden = true; $("both").hidden = true; $("confirm").hidden = true; source = "käsin"; render();
     if (sheetUrl) {
       const btn = $("save"); btn.disabled = true;
-      try { await post({ action: "save", meter: METERS[meter], date, value: rec.value, source: rec.source }); toast("Tallennettu ja lähetetty taulukkoon"); }
+      try { if (moved) await post({ action: "delete", meter: METERS[meter], date: moved }); await post({ action: "save", meter: METERS[meter], date, value: rec.value, source: rec.source }); toast((wasEdit ? "Muutos tallennettu" : "Tallennettu") + " ja lähetetty taulukkoon"); }
       catch (e) { toast("Tallennettu tälle laitteelle, mutta taulukkoon ei saatu yhteyttä"); }
       finally { btn.disabled = false; }
-    } else toast(METERS[meter] + " vesi: " + fmt(rec.value, 3) + " m³ tallennettu");
+    } else toast(wasEdit ? "Muutos tallennettu" : METERS[meter] + " vesi: " + fmt(rec.value, 3) + " m³ tallennettu");
   };
 
   // ---- Sheets setup ----
