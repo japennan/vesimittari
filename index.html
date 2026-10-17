@@ -101,16 +101,17 @@ ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
 .chart .grid { stroke: var(--line); }
 .chart .bar { fill: var(--accent); } .chart .bar.last { fill: var(--fg); }
 .editbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 14px; font-weight: 600; }
-.item.tap { cursor: pointer; border-radius: 8px; }
-.item.tap:active { background: var(--accent-soft); }
 .item.editing { background: var(--accent-soft); margin: 0 -8px; padding-left: 8px; padding-right: 8px; }
+.acts { display: flex; gap: 4px; }
+.ibtn { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--muted); cursor: pointer; padding: 0; }
+.ibtn:active { transform: scale(.94); }
+.ibtn.del.armed { background: var(--warm); border-color: var(--warm); color: #fff; }
+.ibtn:hover { color: var(--fg); }
 .item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .item:first-child { border-top: 0; }
 .item .d { font-size: 14px; font-weight: 600; }
 .item small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; font-family: var(--f-body); }
 .item .v { font-family: var(--f-digit); font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
-.del { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 6px; font: 600 12px var(--f-body); }
-.del.armed { color: #fff; background: var(--warm); }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
 @media (max-width: 380px) { .drum span { font-size: 30px; min-width: 20px; } }
 
@@ -282,6 +283,10 @@ button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
     $("chart").innerHTML = s + "</svg>";
   }
 
+  const SVG = (d) => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  const ICON_EDIT = SVG('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>');
+  const ICON_DEL = SVG('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>');
+  const ICON_OK = SVG('<path d="M5 12l5 5L20 7"/>');
   let showCount = 7;
   function renderList(rs, iv) {
     const list = $("list"); list.innerHTML = "";
@@ -289,21 +294,32 @@ button, .btn, .seg button { user-select: none; -webkit-user-select: none; }
     const by = Object.fromEntries(iv.map(x => [x.date, x]));
     const shown = [...rs].reverse().slice(0, showCount);
     for (const r of shown) {
-      const row = document.createElement("div"); row.className = "item tap" + (editing && editing.meter === r.meter && editing.date === r.date ? " editing" : "");
-      row.onclick = (ev) => { if (!ev.target.closest(".del")) startEdit(r); };
+      const row = document.createElement("div"); row.className = "item" + (editing && editing.meter === r.meter && editing.date === r.date ? " editing" : "");
       const d = document.createElement("div"); d.className = "d"; d.textContent = fiDate(r.date);
       const sm = document.createElement("small"); sm.textContent = weekday(r.date) + " · " + (r.source || "käsin"); d.append(sm);
       const v = document.createElement("div"); v.className = "v"; v.textContent = fmt(r.value, 3);
       const vs = document.createElement("small"), x = by[r.date];
       vs.textContent = x ? (x.liters >= 0 ? "+" : "") + fmt(Math.round(x.liters), 0) + " l" + (x.days > 1 ? " / " + x.days + " vrk" : "") : "ensimmäinen"; v.append(vs);
-      const del = document.createElement("button"); del.className = "del"; del.type = "button"; del.textContent = "Poista";
+      const acts = document.createElement("div"); acts.className = "acts";
+      const ed = document.createElement("button"); ed.type = "button"; ed.className = "ibtn"; ed.innerHTML = ICON_EDIT;
+      ed.setAttribute("aria-label", "Muokkaa lukemaa " + fiDate(r.date)); ed.title = "Muokkaa";
+      ed.onclick = () => startEdit(r);
+      const del = document.createElement("button"); del.type = "button"; del.className = "ibtn del"; del.innerHTML = ICON_DEL;
+      del.setAttribute("aria-label", "Poista lukema " + fiDate(r.date)); del.title = "Poista";
       del.onclick = async () => {
-        if (!del.classList.contains("armed")) { del.classList.add("armed"); del.textContent = "Vahvista"; setTimeout(() => { del.classList.remove("armed"); del.textContent = "Poista"; }, 3000); return; }
+        if (!del.classList.contains("armed")) {
+          del.classList.add("armed"); del.innerHTML = ICON_OK; del.setAttribute("aria-label", "Vahvista poisto");
+          toast("Napauta uudelleen poistaaksesi " + fiDate(r.date) + " lukeman");
+          setTimeout(() => { del.classList.remove("armed"); del.innerHTML = ICON_DEL; del.setAttribute("aria-label", "Poista lukema " + fiDate(r.date)); }, 3000);
+          return;
+        }
+        if (editing && editing.meter === r.meter && editing.date === r.date) { endEdit(); $("value").value = ""; }
         all = all.filter(a => !(a.meter === r.meter && a.date === r.date)); store.set(KEY, all); render();
         if (sheetUrl) { try { await post({ action: "delete", meter: METERS[r.meter], date: r.date }); toast("Poistettu myös taulukosta"); } catch (e) { toast("Poistettu täältä, mutta taulukkoon ei saatu yhteyttä"); } }
         else toast("Lukema poistettu");
       };
-      row.append(d, v, del); list.append(row);
+      acts.append(ed, del);
+      row.append(d, v, acts); list.append(row);
     }
     if (rs.length > shown.length) {
       const more = document.createElement("button"); more.type = "button"; more.className = "btn ghost small"; more.style.marginTop = "8px";
